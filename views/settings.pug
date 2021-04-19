@@ -1,0 +1,18 @@
+extends layout
+
+
+block content
+  .container
+    h1 Settings, logged in as: #{user}
+    .card
+      h4 Change password
+      form(method='POST', action='/settings/pass')
+        #form-group
+          label Current Password:
+          input.form-control(name='attempt', type='Password')
+          label New Password:
+          input.form-control(name='new_pass',type='password')
+          label Confirm:
+          input.form-control(name='password2',type='password')
+        br
+        input.btn.btn-primary(type='submit',value='Submit')

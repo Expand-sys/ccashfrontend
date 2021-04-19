@@ -1,0 +1,29 @@
+extends layout
+
+
+block content
+  .container
+    h1 Welcome to the bank interface #{user}
+    .card
+      h2 Send Funds 
+    
+      h4 Balance: #{balance}
+      
+      form(method='POST', action='/sendfunds')
+        #form-group
+          label amount to send:
+          input(type="number" min="0" max=balance name="amount")
+          br
+        #form-group
+          label reciever:
+          input(name='name', type='text')
+          br
+        #form-group
+          label Your Password:
+          input(name='senderpass', type='password')
+          br
+          br
+
+
+        input.btn.btn-primary(type='submit', value='Submit')
+    br
