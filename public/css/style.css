@@ -5,7 +5,13 @@
       height: 100vh;
     }
 body{
-  background: #7f8891 ;
+  background: #f4da46;
+}
+.navbarrr{
+  background: #bc5b0b;
+}
+.blue{
+  background: #46cff2;
 }
 .container-large{
   padding-left: 10%;
