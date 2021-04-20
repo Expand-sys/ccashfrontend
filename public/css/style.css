@@ -124,12 +124,12 @@ input[type="checkbox"]:checked ~ .reveal-if-active {
   max-height: 100px; /* little bit of a magic number :( */
   overflow: visible;
 }
-
+@font-face {font-family: "PapyrusW01"; src: url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.eot"); src: url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.eot?#iefix") format("embedded-opentype"), url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.woff2") format("woff2"), url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.woff") format("woff"), url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.ttf") format("truetype"), url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.svg#PapyrusW01") format("svg"); }
 
 
 
 h1, h2, h3, h4, h5, h6, p, label{
-  font-family: 'Josefin Sans', sans-serif;=
+  font-family: PapyrusW01;=
 }
 
 h1{
