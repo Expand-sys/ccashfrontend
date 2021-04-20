@@ -4,25 +4,29 @@ extends layout
 block content
   .container
     h1 Welcome to the bank interface #{user}
-    .card
-      h2 Send Funds 
-    
-      h4 Balance: #{balance}
-      
+    .card.shadow-lg
+      .row 
+        .col
+          h2 Send Funds 
+        .col
+          h4 Balance: #{balance}
+      hr
       form(method='POST', action='/sendfunds')
-        #form-group
-          label amount to send:
-          input(type="number" min="0" max=balance name="amount")
-          br
-        #form-group
-          label reciever:
-          input(name='name', type='text')
-          br
-        #form-group
-          label Your Password:
-          input(name='senderpass', type='password')
-          br
-          br
+        label amount to send:
+        br
+        input.form-control-lg.shadow(type="number" min="0" max=balance name="amount")
+        br
+        br
+        label reciever:
+        br
+        input.form-control-lg.shadow(name='name', type='text')
+        br
+        br
+        label Your Password:
+        br
+        input.form-control-lg.shadow(name='senderpass', type='password')
+        br
+        br
 
 
         input.btn.btn-primary(type='submit', value='Submit')

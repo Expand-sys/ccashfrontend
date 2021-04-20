@@ -4,10 +4,13 @@ html
     title CCashBank
     link(href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet")
     link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css", integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z", crossorigin="anonymous")
+    link(rel="preconnect" href="https://fonts.gstatic.com")
+    link(href="https://fonts.googleapis.com/css2?family=Lato&family=Montserrat&display=swap" rel="stylesheet")
+
     link(rel='stylesheet' href='/css/style.css')
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
   body
-    nav.navbar.navbar-expand-lg.navbar-light.navbarrr
+    nav.navbar.navbar-expand-lg.navbar-light.navbarrr.shadow-lg
       .container
         a.navbar-brand(href='/')
           img(src="../CCashLogo2.png" style="width:75px")
@@ -16,22 +19,22 @@ html
         #navbars.collapse.navbar-collapse
           ul.navbar-nav.mr-auto
           
-          ul.navbar-nav.mr-right
+          ul.navbar-nav.mr-right.text-white
             if user == undefined
               li.nav-item
-                a.nav-link(href='/login') Login
+                a.nav-link(href='/login').text-white Login
               li.nav-item
-                a.nav-link(href='/register') Register
+                a.nav-link(href='/register').text-white Register
             if user
               li.nav-item
-                a.nav-link(href='/logout') Log out
+                a.nav-link(href='/logout').text-white Log out
               li.nav-item
-                a.nav-link(href='/BankF') Bank Dashboard
+                a.nav-link(href='/BankF').text-white Bank Dashboard
               li.nav-item
-                a.nav-link(href='/settings') Settings
+                a.nav-link(href='/settings').text-white Settings
               if admin == true
                 li.nav-item
-                  a.nav-link(href='/admin') Admin
+                  a.nav-link(href='/admin').text-white Admin
     .container
       != messages('message', locals)
       if errors 

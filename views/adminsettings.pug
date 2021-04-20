@@ -6,11 +6,11 @@ block content
     h1 Settings, logged in as: #{user}
     if admin == true
       br
-      .card
+      .card.shadow-lg
         center
           h4 here are your settings king
       br
-      .card
+      .card.shadow-lg
         h4 Add User
         form(method='POST', action='/admin/user')
           #form-group
@@ -25,7 +25,7 @@ block content
           br
           input.btn.btn-primary(type='submit',value='Submit')
       br
-      .card
+      .card.shadow-lg
         h4 Check User Balance 
         form(method='POST', action='/admin/baluser')
           #form-group
@@ -34,7 +34,7 @@ block content
           br
           input.btn.btn-primary(type='submit',value='Submit')
       br
-      .card
+      .card.shadow-lg
         h4 Change Balance of User
         form(method='POST', action='/admin/bal')
           #form-group
@@ -45,7 +45,7 @@ block content
           br
           input.btn.btn-primary(type='submit',value='Submit')
       br
-      .card
+      .card.shadow-lg
         h4 Delete user
         p This will permanently delete user make sure you get it right
         form(method='POST', action='/admin/userdelete')
@@ -57,7 +57,7 @@ block content
           br
           input.btn.btn-primary(type='submit',value='Submit')
       br
-      .card
+      .card.shadow-lg
         h4 Close Server
         form(method='POST', action='/admin/close')
           #form-group
