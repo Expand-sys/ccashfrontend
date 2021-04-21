@@ -16,9 +16,9 @@ const fs = require('fs');
 const mongoose = require('mongoose')
 let Log = require('./schemas/log.js');
 
-
+dotenv.config();
 //mongodb connection
-const connectionString = 'mongodb+srv://CCashLogger:peEL6qvSJCDSUKWB@cluster0.bfejg.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+const connectionString = process.env.MONGO
 
 mongoose.connect(connectionString,{
   useNewUrlParser: true,
@@ -40,7 +40,7 @@ db.on('error', function(err){
 });
 
 
-dotenv.config();
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.use(flash());
@@ -86,6 +86,8 @@ app.use(expressValidator({
 }));
 app.post('/setup', async function(req, res){
   console.log(req.body)
+  let mongo = req.body.mongo;
+  process.env.MONGO = mongo
   let apiurl = 'BANKAPIURL='+req.body.url
   process.env.BANKAPIURL = req.body.url
   let banksecure = 'SECURE=false'
@@ -95,7 +97,7 @@ app.post('/setup', async function(req, res){
     process.env.SECURE = true
   }
   process.env.SETUP = true
-  fs.writeFileSync('.env', apiurl+'\n'+banksecure+'\nSETUP=true')
+  fs.writeFileSync('.env', apiurl+'\n'+banksecure+'\n'+mongo+'\nSETUP=true')
   dotenv.config();
 
   res.redirect('/')
