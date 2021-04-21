@@ -37,7 +37,10 @@ body{
   width: 250px;
   background-color:white;
 }
-
+.logs{
+  height:350px;
+  overflow:auto;
+}
 
 .content{ flex-grow: 1; }
 

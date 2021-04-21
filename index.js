@@ -13,6 +13,32 @@ const MemoryStore = require('memorystore')(session)
 const url = require('url')
 const dotenv = require('dotenv');
 const fs = require('fs');
+const mongoose = require('mongoose')
+let Log = require('./schemas/log.js');
+
+
+//mongodb connection
+const connectionString = 'mongodb+srv://CCashLogger:peEL6qvSJCDSUKWB@cluster0.bfejg.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+
+mongoose.connect(connectionString,{
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useFindAndModify: false,
+  useCreateIndex: true
+});
+
+let db = mongoose.connection;
+
+//check connection
+db.once('open', function(){
+  console.log('Connected to MongoDB');
+})
+
+//check for DB errors
+db.on('error', function(err){
+  console.log(err);
+});
+
 
 dotenv.config();
 app.set('views', path.join(__dirname, 'views'));
@@ -120,8 +146,17 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   } catch(err){
     console.log(err)
   }
+  let logsent = await Log.find({sender:req.session.user}).sort({date: -1}).exec()
+  let logrec = await Log.find({receiver:req.session.user}).sort({date: -1}).exec()
+
+
+
+
+
 
   res.render('bankf',{
+    logrec:logrec,
+    logsent:logsent,
     user: req.session.user,
     balance: balance.value,
     user: req.session.user,
@@ -155,10 +190,29 @@ app.post('/sendfunds', async function(req, res){
   })
   if(result.body.value == true || result.body.value){
     req.session.success = true;
+    let log = new Log();
+    //post details
+    log.sender = a_name;
+    log.receiver = name;
+    log.amount = parseInt(amount);
+    log.date = new Date();
+    log.save(function(err){
+      if(err){
+        console.log(err);
+        return;
+      }
+    })
     res.redirect('/BankF')
   } else {
     errors.push({msg: "Transfer Unsuccessful"})
+    let logsent = await Log.find({sender:req.session.user}).sort({date: -1}).exec()
+    let logrec = await Log.find({receiver:req.session.user}).sort({date: -1}).exec()
+
+
+
     res.render("bankf",{
+      logsent:logsent,
+      logrec:logrec,
       errors:errors,
       successes: successes,
       balance:balance.value,

@@ -11,23 +11,48 @@ block content
         .col
           h4 Balance: #{balance}
       hr
-      form(method='POST', action='/sendfunds')
-        label amount to send:
-        br
-        input.form-control-lg.shadow(type="number" min="0" max=balance name="amount")
-        br
-        br
-        label reciever:
-        br
-        input.form-control-lg.shadow(name='name', type='text')
-        br
-        br
-        label Your Password:
-        br
-        input.form-control-lg.shadow(name='senderpass', type='password')
-        br
-        br
+      .row 
+        .col-4
+          form(method='POST', action='/sendfunds')
+            label amount to send:
+            br
+            input.form-control-lg.shadow(type="number" min="0" max=balance name="amount")
+            br
+            br
+            label reciever:
+            br
+            input.form-control-lg.shadow(name='name', type='text')
+            br
+            br
+            label Your Password:
+            br
+            input.form-control-lg.shadow(name='senderpass', type='password')
+            br
+            br
+            input.btn.btn-primary(type='submit', value='Submit')
+        .col-8
+          .card
+          
+            ul#transactions.nav.nav-tabs.card-header-tabs(role='tablist')
+              li.nav-item
+                a.nav-link.active.text-black(href='#sent', role='tab', aria-controls='sent', aria-selected='true') Sent
+              li.nav-item
+                a.nav-link.text-black(href='#received', role='tab', aria-controls='recieved', aria-selected='false') Recieved
+            .tab-content.mt-3
+              #sent.tab-pane.active(role='tabpanel')
+                .logs
+                  each log in logsent
+                    hr
+                    p Date: #{log.date}
+                    p #{log.sender} Sent #{log.receiver} $#{log.amount}
+                    hr
+              #received.tab-pane(role='tabpanel', aria-labelledby='contact-tab')
+                .logs
+                  each log in logrec
+                    hr
+                    p Date: #{log.date}
+                    p #{log.sender} Sent #{log.receiver} $#{log.amount}
+                    hr
 
-
-        input.btn.btn-primary(type='submit', value='Submit')
+        
     br
