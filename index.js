@@ -102,7 +102,6 @@ app.post('/setup', async function(req, res){
   res.redirect('/')
 })
 app.get('/', async function(req, res){
-  console.log(thingy)
   if(setup==false){
     res.render('setup')
   }else{
@@ -144,7 +143,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   let balance = 0
   try{
     balance = await got(process.env.BANKAPIURL+'BankF/'+req.session.user+'/bal')
-    console.log(balance)
+    console.log(balance.timings)
     balance = JSON.parse(balance.body)
   } catch(err){
     console.log(err)
