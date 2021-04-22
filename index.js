@@ -151,7 +151,6 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   }
 
   logsent = logsent.body.value
-  console.log(logsent)
   if(logsent == 1 || logsent == -1 || logrec == null){
     logsent = undefined
   }else{
@@ -249,12 +248,10 @@ app.post('/sendfunds', async function(req, res){
     for( i in logrec){
       let d = new Date(logrec[i].time)
       logrec[i].time = d
-      console.log(logrec[i].time)
     }
     for( i in logsent){
       let d = new Date(logsent[i].time)
       logsent[i].time = d
-      console.log(logsent[i].time)
     }
 
     res.render("bankf",{
