@@ -41,18 +41,20 @@ block content
             .tab-content.mt-3
               #sent.tab-pane.active(role='tabpanel')
                 .logs
-                  each log in logsent
-                    hr
-                    p Date: #{log.date}
-                    p #{log.sender} Sent #{log.receiver} $#{log.amount}
-                    hr
+                  if logsent
+                    each log in logsent
+                      hr
+                      p Date: #{log.date}
+                      p You sent #{log.to} $#{log.amount}
+                      hr
               #received.tab-pane(role='tabpanel', aria-labelledby='contact-tab')
                 .logs
-                  each log in logrec
-                    hr
-                    p Date: #{log.date}
-                    p #{log.sender} Sent #{log.receiver} $#{log.amount}
-                    hr
+                  if logrec
+                    each log in logrec
+                      hr
+                      p Date: #{log.date}
+                      p #{log.from} sent you $#{log.amount}
+                      hr
 
         
     br
