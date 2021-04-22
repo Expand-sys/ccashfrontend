@@ -324,43 +324,46 @@ app.post('/login', async function(req, res){
   } catch(err){
     console.log(err)
   }
-  if(!adminTest.body.value){
+  if(adminTest.body.value == undefined){
     res.redirect('/')
-  }
-  req.session.admin = adminTest.body.value
-  req.session.adminp = password
-  let verified
-  try{
-    verified = await got.post(process.env.BANKAPIURL+'BankF/vpass', {
-      json:{
-        name: name,
-        attempt: password
-      },
-      responseType:'json'
+  }else{
+    req.session.admin = adminTest.body.value
+    req.session.adminp = password
+    let verified
+    try{
+      verified = await got.post(process.env.BANKAPIURL+'BankF/vpass', {
+        json:{
+          name: name,
+          attempt: password
+        },
+        responseType:'json'
 
-    })
-
-
-  } catch(err){
-    console.log(err)
-  } finally {
-    console.log(verified.body.value)
-    if(verified.body.value == 0){
-      errors.push({msg: 'Password wrong'})
-      res.render('login',{
-        errors:errors
       })
-    }else if(verified.body.value == 1){
-      req.session.user = name;
-      req.session.password = password
-      res.redirect('/BankF')
-    } else {
-      errors.push({msg: 'User not found'})
-      res.render('login',{
-        errors:errors
-      })
+
+
+    } catch(err){
+      console.log(err)
+    } finally {
+      console.log(verified.body.value)
+      if(verified.body.value == 0){
+        errors.push({msg: 'Password wrong'})
+        res.render('login',{
+          errors:errors
+        })
+      }else if(verified.body.value == 1){
+        req.session.user = name;
+        req.session.password = password
+        res.redirect('/BankF')
+      } else {
+        errors.push({msg: 'User not found'})
+        res.render('login',{
+          errors:errors
+        })
+      }
     }
+
   }
+
 
   //res.redirect('/login')
 })
