@@ -15,7 +15,7 @@ const dotenv = require('dotenv');
 const fs = require('fs');
 const mongoose = require('mongoose')
 let Log = require('./schemas/log.js');
-
+const ping = require('ping')
 dotenv.config();
 //mongodb connection
 const connectionString = process.env.MONGO
@@ -103,6 +103,11 @@ app.post('/setup', async function(req, res){
   res.redirect('/')
 })
 app.get('/', async function(req, res){
+  thingy = await ping.promise.probe('ccash.ryzerth.com',{
+    timeout: 10,
+    extra: ['-i', '2'],
+  })
+  console.log(thingy)
   if(setup==false){
     res.render('setup')
   }else{
