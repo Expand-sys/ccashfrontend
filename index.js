@@ -144,6 +144,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   let balance = 0
   try{
     balance = await got(process.env.BANKAPIURL+'BankF/'+req.session.user+'/bal')
+    console.log(balance)
     balance = JSON.parse(balance.body)
   } catch(err){
     console.log(err)
