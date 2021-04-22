@@ -151,22 +151,27 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   }
 
   logsent = logsent.body.value
-  if(logsent == 1){
+  if(logsent == 1 || logsent == -1){
     logsent = undefined
-  }else if (logsent == -1){
-    logsent = undefined
-  } else{
+  }else{
     logsent = logsent.filter(({ from }) => from === req.session.user)
   }
   logrec = logrec.body.value
-  if(logrec == 1){
-    logrec = undefined
-  }else if (logrec == -1){
+  if(logrec == 1 || logrec == -1){
     logrec = undefined
   } else{
     logrec = logrec.filter(({ to }) => to === req.session.user)
   }
+  for( i in logrec){
+    logrec[i].time = Date(logrec[i].time)
+    console.log(logrec[i].time)
+  }
+  for( i in logsent){
+    logsent[i].time = Date(logsent[i].time)
+    console.log(logsent[i].time)
+  }
   res.render('bankf',{
+    date: Date(1394104654000),
     logrec:logrec,
     logsent:logsent,
     user: req.session.user,
@@ -206,7 +211,7 @@ app.post('/sendfunds', async function(req, res){
     res.redirect('/BankF')
   } else {
     errors.push({msg: "Transfer Unsuccessful"})
-    
+
     let logsent
     let logrec
     try{
@@ -239,16 +244,24 @@ app.post('/sendfunds', async function(req, res){
       logsent = logsent.filter(({ from }) => from === req.session.user)
     }
     logrec = logrec.body.value
-    if(logrec == 1){
-      logrec = undefined
-    }else if (logrec == -1){
+    if(logrec == 1 || logrec == -1){
       logrec = undefined
     } else{
       logrec = logrec.filter(({ to }) => to === req.session.user)
     }
-
+    for( i in logrec){
+      let d = new Date(logrec[i].time)
+      logrec[i].time = d
+      console.log(logrec[i].time)
+    }
+    for( i in logsent){
+      let d = new Date(logsent[i].time)
+      logsent[i].time = d
+      console.log(logsent[i].time)
+    }
 
     res.render("bankf",{
+
       logsent:logsent,
       logrec:logrec,
       errors:errors,

@@ -2,6 +2,7 @@ extends layout
 
 
 block content
+  p #{date}
   .container
     h1 Welcome to the bank interface #{user}
     .card.shadow-lg
@@ -44,7 +45,7 @@ block content
                   if logsent
                     each log in logsent
                       hr
-                      p Date: #{log.date}
+                      p Date: #{log.time}
                       p You sent #{log.to} $#{log.amount}
                       hr
               #received.tab-pane(role='tabpanel', aria-labelledby='contact-tab')
