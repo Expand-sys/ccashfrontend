@@ -151,13 +151,14 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   }
 
   logsent = logsent.body.value
-  if(logsent == 1 || logsent == -1){
+  console.log(logsent)
+  if(logsent == 1 || logsent == -1 || logrec == null){
     logsent = undefined
   }else{
     logsent = logsent.filter(({ from }) => from === req.session.user)
   }
   logrec = logrec.body.value
-  if(logrec == 1 || logrec == -1){
+  if(logrec == 1 || logrec == -1 || logrec == null){
     logrec = undefined
   } else{
     logrec = logrec.filter(({ to }) => to === req.session.user)
@@ -233,18 +234,17 @@ app.post('/sendfunds', async function(req, res){
     }
 
     logsent = logsent.body.value
-    if(logsent == 1){
+    console.log(logsent)
+    if(logsent == 1|| logrec == -1 || logrec == null){
       logsent = undefined
-    }else if (logsent == -1){
-      logsent = undefined
-    } else{
-      logsent = logsent.filter(({ from }) => from === req.session.user)
+    }else{
+      logsent = await logsent.filter(({ from }) => from === req.session.user)
     }
     logrec = logrec.body.value
-    if(logrec == 1 || logrec == -1){
+    if(logrec == 1 || logrec == -1 || logrec == null){
       logrec = undefined
     } else{
-      logrec = logrec.filter(({ to }) => to === req.session.user)
+      logrec = await logrec.filter(({ to }) => to === req.session.user)
     }
     for( i in logrec){
       let d = new Date(logrec[i].time)
