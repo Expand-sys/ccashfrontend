@@ -164,14 +164,11 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   }
   for( i in logrec){
     logrec[i].time = Date(logrec[i].time)
-    console.log(logrec[i].time)
   }
   for( i in logsent){
     logsent[i].time = Date(logsent[i].time)
-    console.log(logsent[i].time)
   }
   res.render('bankf',{
-    date: Date(1394104654000),
     logrec:logrec,
     logsent:logsent,
     user: req.session.user,
