@@ -148,10 +148,26 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   } catch(err){
     console.log(err)
   }
-  let logsent = await Log.find({sender:req.session.user}).sort({date: -1}).exec()
-  let logrec = await Log.find({receiver:req.session.user}).sort({date: -1}).exec()
+  console.log('mongologs '+Date.now())
+  let logsent = await Log.find({sender:req.session.user}).exec()
+  let logrec = await Log.find({receiver:req.session.user}).exec()
+  console.log('mongologs '+Date.now())
 
 
+
+
+  try{
+    console.log('twixlogs '+Date.now())
+    logstwix = await got.post(process.env.BANKAPIURL+'BankF/'+req.session.user+'/log',{
+      json:{
+        attempt: 'test123'
+      },
+      responseType:'json'
+    })
+    console.log('twixlogs '+Date.now())
+  } catch(e) {
+      console.log(e)
+  }
 
 
 
