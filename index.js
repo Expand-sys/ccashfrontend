@@ -324,6 +324,9 @@ app.post('/login', async function(req, res){
   } catch(err){
     console.log(err)
   }
+  if(!adminTest.body.value){
+    res.redirect('/')
+  }
   req.session.admin = adminTest.body.value
   req.session.adminp = password
   let verified
