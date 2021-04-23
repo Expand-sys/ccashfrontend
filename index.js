@@ -150,7 +150,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   } catch(e) {
       console.log(e)
   }
-  console.log("timings to server"+logrec.timings)
+  console.log(logrec.timings)
   console.log("query finished "+Date.now())
   logsent = logsent.body.value
   if(logsent == 1 || logsent == -1 || logrec == null){
