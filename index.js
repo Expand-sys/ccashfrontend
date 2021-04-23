@@ -129,6 +129,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   }
   let logsent
   let logrec
+  console.log('start '+Date.now())
   try{
     logsent = await got.post(process.env.BANKAPIURL+'BankF/'+req.session.user+'/log',{
       json:{
@@ -149,7 +150,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   } catch(e) {
       console.log(e)
   }
-
+  console.log("query finished "+Date.now())
   logsent = logsent.body.value
   if(logsent == 1 || logsent == -1 || logrec == null){
     logsent = undefined
@@ -168,6 +169,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   for( i in logsent){
     logsent[i].time = Date(logsent[i].time)
   }
+  console.log("begin render " + Date.now())
   res.render('bankf',{
     logrec:logrec,
     logsent:logsent,
@@ -211,6 +213,7 @@ app.post('/sendfunds', async function(req, res){
 
     let logsent
     let logrec
+
     try{
       logsent = await got.post(process.env.BANKAPIURL+'BankF/'+req.session.user+'/log',{
         json:{
