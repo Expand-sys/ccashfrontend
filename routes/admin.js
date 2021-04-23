@@ -9,7 +9,10 @@ const expressValidator = require('express-validator');
 const session = require('express-session');
 const {postUser} = require('../helpers/functions.js')
 const got = require('got')
+const MemoryStore = require('memorystore')(session)
 console.log('Sen was here')
+
+
 router.get('/', checkAdmin, function(req, res){
   res.render('adminsettings', {
     user: req.session.user,
@@ -150,6 +153,36 @@ router.post('/userdelete', checkAdmin, async function(req,res){
     successes: successes,
     errors: errors,
   })
+})
+router.post('/destroyallsessions', checkAdmin, async function(req,res) {
+  let {attempt} = req.body;
+  let adminTest
+  let errors = []
+  try{
+    adminTest = await got.post(process.env.BANKAPIURL+'BankF/admin/vpass',{
+      json:{
+        attempt: attempt,
+      },
+      responseType:'json'
+    })
+  } catch(err){
+    console.log(err)
+  }
+  console.log(adminTest.body.value)
+  if(adminTest){
+    req.sessionStore.clear(function(err){
+      console.log(err)
+    })
+    res.redirect('/')
+  }else{
+    errors.push({msg: "failed admin password check"})
+    res.render("adminsettings",{
+      user: req.session.user,
+      admin: req.session.admin,
+      errors: errors,
+    })
+  }
+
 })
 router.post('/close', checkAdmin, async function(req,res){
   let {attempt} = req.body;

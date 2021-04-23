@@ -129,6 +129,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   }
   let logsent
   let logrec
+  console.log('start '+Date.now())
   try{
     logsent = await got.post(process.env.BANKAPIURL+'BankF/'+req.session.user+'/log',{
       json:{
@@ -149,15 +150,16 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   } catch(e) {
       console.log(e)
   }
-
+  console.log(logrec.timings)
+  console.log("query finished "+Date.now())
   logsent = logsent.body.value
-  if(logsent == 1 || logsent == -1){
+  if(logsent == 1 || logsent == -1 || logrec == null){
     logsent = undefined
   }else{
     logsent = logsent.filter(({ from }) => from === req.session.user)
   }
   logrec = logrec.body.value
-  if(logrec == 1 || logrec == -1){
+  if(logrec == 1 || logrec == -1 || logrec == null){
     logrec = undefined
   } else{
     logrec = logrec.filter(({ to }) => to === req.session.user)
@@ -168,6 +170,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   for( i in logsent){
     logsent[i].time = Date(logsent[i].time)
   }
+  console.log("begin render " + Date.now())
   res.render('bankf',{
     logrec:logrec,
     logsent:logsent,
@@ -211,6 +214,7 @@ app.post('/sendfunds', async function(req, res){
 
     let logsent
     let logrec
+
     try{
       logsent = await got.post(process.env.BANKAPIURL+'BankF/'+req.session.user+'/log',{
         json:{
@@ -233,28 +237,25 @@ app.post('/sendfunds', async function(req, res){
     }
 
     logsent = logsent.body.value
-    if(logsent == 1){
+    console.log(logsent)
+    if(logsent == 1|| logrec == -1 || logrec == null){
       logsent = undefined
-    }else if (logsent == -1){
-      logsent = undefined
-    } else{
-      logsent = logsent.filter(({ from }) => from === req.session.user)
+    }else{
+      logsent = await logsent.filter(({ from }) => from === req.session.user)
     }
     logrec = logrec.body.value
-    if(logrec == 1 || logrec == -1){
+    if(logrec == 1 || logrec == -1 || logrec == null){
       logrec = undefined
     } else{
-      logrec = logrec.filter(({ to }) => to === req.session.user)
+      logrec = await logrec.filter(({ to }) => to === req.session.user)
     }
     for( i in logrec){
       let d = new Date(logrec[i].time)
       logrec[i].time = d
-      console.log(logrec[i].time)
     }
     for( i in logsent){
       let d = new Date(logsent[i].time)
       logsent[i].time = d
-      console.log(logsent[i].time)
     }
 
     res.render("bankf",{
@@ -324,40 +325,46 @@ app.post('/login', async function(req, res){
   } catch(err){
     console.log(err)
   }
-  req.session.admin = adminTest.body.value
-  req.session.adminp = password
-  let verified
-  try{
-    verified = await got.post(process.env.BANKAPIURL+'BankF/vpass', {
-      json:{
-        name: name,
-        attempt: password
-      },
-      responseType:'json'
+  if(adminTest.body.value == undefined){
+    res.redirect('/')
+  }else{
+    req.session.admin = adminTest.body.value
+    req.session.adminp = password
+    let verified
+    try{
+      verified = await got.post(process.env.BANKAPIURL+'BankF/vpass', {
+        json:{
+          name: name,
+          attempt: password
+        },
+        responseType:'json'
 
-    })
-
-
-  } catch(err){
-    console.log(err)
-  } finally {
-    console.log(verified.body.value)
-    if(verified.body.value == 0){
-      errors.push({msg: 'Password wrong'})
-      res.render('login',{
-        errors:errors
       })
-    }else if(verified.body.value == 1){
-      req.session.user = name;
-      req.session.password = password
-      res.redirect('/BankF')
-    } else {
-      errors.push({msg: 'User not found'})
-      res.render('login',{
-        errors:errors
-      })
+
+
+    } catch(err){
+      console.log(err)
+    } finally {
+      console.log(verified.body.value)
+      if(verified.body.value == 0){
+        errors.push({msg: 'Password wrong'})
+        res.render('login',{
+          errors:errors
+        })
+      }else if(verified.body.value == 1){
+        req.session.user = name;
+        req.session.password = password
+        res.redirect('/BankF')
+      } else {
+        errors.push({msg: 'User not found'})
+        res.render('login',{
+          errors:errors
+        })
+      }
     }
+
   }
+
 
   //res.redirect('/login')
 })
