@@ -376,8 +376,8 @@ app.use('/admin', admin);
 let settings = require('./routes/settings');
 app.use('/settings', settings)
 
-
-
+let marketplace = require('./routes/marketplace')
+app.use('/marketplace', marketplace)
 
 
 app.get('/logout', function(req, res){

@@ -99,3 +99,11 @@ h1{
 .shadow{
   box-shadow: 5px 10px #888888;
 }
+$w: Min(10em, 100%);
+
+.grid--masonry {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, $w);
+
+  > * { width: $w; }
+}
