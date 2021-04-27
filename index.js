@@ -239,7 +239,7 @@ app.post('/sendfunds', async function(req, res){
 
     logsent = logsent.body.value
     console.log(logsent)
-    if(logsent == 1|| logrec == -1 || logrec == null){
+    if(logsent == 1|| logsent == -1 || logsent == null){
       logsent = undefined
     }else{
       logsent = await logsent.filter(({ from }) => from === req.session.user)
