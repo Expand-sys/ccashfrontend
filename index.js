@@ -153,13 +153,14 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   console.log(logrec.timings)
   console.log("query finished "+Date.now())
   logsent = logsent.body.value
-  if(logsent == 1 || logsent == -1 || logrec == null){
+  console.log(logsent)
+  if(logsent === 1 || logsent === -1 || logsent == null){
     logsent = undefined
   }else{
     logsent = await logsent.filter(({ from }) => from === req.session.user)
   }
   logrec = logrec.body.value
-  if(logrec == 1 || logrec == -1 || logrec == null){
+  if(logrec === 1 || logrec === -1 || logrec === null){
     logrec = undefined
   } else{
     logrec = await logrec.filter(({ to }) => to === req.session.user)
