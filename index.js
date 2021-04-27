@@ -153,7 +153,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   console.log(logrec.timings)
   console.log("query finished "+Date.now())
   logsent = logsent.body.value
-  if(logsent == 1 || logsent == -1 || logrec == null){
+  if(logsent == 1 || logsent == -1 || logsent == null){
     logsent = undefined
   }else{
     logsent = logsent.filter(({ from }) => from === req.session.user)

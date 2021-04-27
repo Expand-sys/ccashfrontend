@@ -1,0 +1,41 @@
+extends marketlayout
+
+block content
+  .container
+    .card
+      .row 
+        .col
+          .card
+            img(src="/blockimages/items/"+item.itemId+"-"+item.meta+".png")
+        .col
+          .row 
+            .col-sm-2
+              p Item:
+              p ID: 
+            .col-sm-4 
+              p #{item.name}
+              p #{item.itemId}-#{item.meta}
+            .col 
+              h4 Buy
+              .row 
+                .col
+                  p Seller 
+                .col 
+                  p Price 
+                .col 
+                  p Amount 
+                .col 
+                  p Link
+              for i in listings 
+                .row 
+                  .col 
+                    p #{i.seller}
+                  .col 
+                    p #{i.price}
+                  .col
+                    p #{i.amount}
+                  .col 
+                    form(method='POST', action='/marketplace/'+i._id+"/buy")
+                      input(type="hidden" value=i name="listing")
+                      input.btn.btn-primary.btn-sm(type='submit', value='Buy')
+            

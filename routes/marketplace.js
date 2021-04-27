@@ -5,6 +5,7 @@ const session = require('express-session');
 const mongoose = require('mongoose')
 const dotenv = require('dotenv');
 const got = require('got');
+const {ensureAuthenticated} = require("../config/auth.js")
 
 
 mongoose.connect(process.env.MONGO,{
@@ -25,6 +26,8 @@ db.on('error', function(err){
 });
 
 let Item = require('../schemas/item')
+let Listing = require('../schemas/listing')
+
 
 router.all('*', function(req, res, next) {
     console.log(req.method, req.url);
@@ -48,21 +51,88 @@ router.get('/', function(req, res) {
 
   })
 });
-
-router.get('/:id',function(req, res, next){
+router.get('/listings', ensureAuthenticated, function(req,res){
+  res.render('listings')
+})
+router.get('/:id',function(req, res){
   Item.findById(req.params.id, function(err, item){
-    res.render('item', {
-      user:req.session.user,
-      admin:req.session.admin,
-      item:item,
-    });
+    Listing.find({foreignid: req.params.id}, function(err, listings){
+      console.log(listings)
+
+
+      res.render('item', {
+        listings: listings,
+        user:req.session.user,
+        admin:req.session.admin,
+        item:item,
+      });
+    })
   });
-
-
 })
 
+router.get('/:id/list',ensureAuthenticated, function(req,res){
+  Item.findById(req.params.id, function(err, item){
+    Listing.find({foreignid: req.params.id}, function(err, listing){
+      console.log(listing)
 
 
+      res.render('itemlist', {
+        user:req.session.user,
+        admin:req.session.admin,
+        item:item,
+      });
+    })
+  });
+})
+router.get('/:id/buy',ensureAuthenticated, function(req,res){
+  Item.findById(req.params.id, function(err, item){
+    Listing.find({foreignid: req.params.id}, function(err, listings){
+      console.log(listings)
+
+
+      res.render('itembuy', {
+        listings:listings,
+        user:req.session.user,
+        admin:req.session.admin,
+        item:item,
+      });
+    })
+  });
+})
+router.post('/:id/list',ensureAuthenticated, function(req,res){
+  let body = req.body
+  let item = JSON.parse(req.body.item)
+  console.log(item)
+  let listing = new Listing();
+  listing.itemId = item.itemId
+  listing.meta = item.meta
+  listing.name = item.name
+  listing.foreignid = item._id
+  listing.price = body.price
+  listing.amount = body.amount
+  listing.seller = req.session.user
+  listing.save(function(err){
+    if(err){
+      console.log(err);
+      return;
+    } else{
+      console.log("added "+ listing.name+" from "+listing.seller)
+    }
+  })
+  res.redirect('/marketplace/listings')
+})
+router.post('/:id',function(req, res){
+  Listing.find({_id: req.params.id}, function(err, listings){
+    console.log(listings)
+
+
+    res.render('item', {
+      listings: listings,
+      user:req.session.user,
+      admin:req.session.admin,
+    });
+  })
+})
 
 // this thingy here populates the database with minecraft items only use once otherwise you are gonna flood your database
 /*router.get('/populatedb', async function(req,res){
