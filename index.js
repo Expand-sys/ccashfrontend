@@ -156,13 +156,13 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   if(logsent == 1 || logsent == -1 || logrec == null){
     logsent = undefined
   }else{
-    logsent = logsent.filter(({ from }) => from === req.session.user)
+    logsent = await logsent.filter(({ from }) => from === req.session.user)
   }
   logrec = logrec.body.value
   if(logrec == 1 || logrec == -1 || logrec == null){
     logrec = undefined
   } else{
-    logrec = logrec.filter(({ to }) => to === req.session.user)
+    logrec = await logrec.filter(({ to }) => to === req.session.user)
   }
   for( i in logrec){
     logrec[i].time = Date(logrec[i].time)
