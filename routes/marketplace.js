@@ -10,7 +10,8 @@ const {ensureAuthenticated} = require("../config/auth.js")
 
 mongoose.connect(process.env.MONGO,{
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  useFindAndModify: true,
 });
 
 let db = mongoose.connection;
@@ -27,7 +28,7 @@ db.on('error', function(err){
 
 let Item = require('../schemas/item')
 let Listing = require('../schemas/listing')
-
+let Inventory = require('../schemas/inventory')
 
 router.all('*', function(req, res, next) {
     console.log(req.method, req.url);
@@ -47,13 +48,22 @@ router.get('/', function(req, res) {
         admin: req.session.admin,
       });
     }
-
-
   })
 });
-router.get('/listings', ensureAuthenticated, function(req,res){
-  res.render('listings')
+
+
+router.get('/marketdash', ensureAuthenticated, function(req,res){
+  Inventory.findOne({user:req.session.user}, function(err, inventory){
+    res.render('marketdash',{
+      user:req.session.user,
+      admin:req.session.admin,
+      inventory:inventory,
+    })
+  })
+
+
 })
+
 router.get('/:id',function(req, res){
   Item.findById(req.params.id, function(err, item){
     Listing.find({foreignid: req.params.id}, function(err, listings){
@@ -72,34 +82,32 @@ router.get('/:id',function(req, res){
 
 router.get('/:id/list',ensureAuthenticated, function(req,res){
   Item.findById(req.params.id, function(err, item){
-    Listing.find({foreignid: req.params.id}, function(err, listing){
-      console.log(listing)
-
-
-      res.render('itemlist', {
-        user:req.session.user,
-        admin:req.session.admin,
-        item:item,
-      });
-    })
+    res.render('itemlist', {
+      user:req.session.user,
+      admin:req.session.admin,
+      item:item,
+    });
   });
 })
 router.get('/:id/buy',ensureAuthenticated, function(req,res){
-  Item.findById(req.params.id, function(err, item){
-    Listing.find({foreignid: req.params.id}, function(err, listings){
-      console.log(listings)
+  Listing.find({foreignid: req.params.id}, function(err, listings){
+    console.log(listings)
 
 
-      res.render('itembuy', {
-        listings:listings,
-        user:req.session.user,
-        admin:req.session.admin,
-        item:item,
-      });
-    })
+    res.render('itembuy', {
+      listings:listings,
+      user:req.session.user,
+      admin:req.session.admin,
+    });
   });
 })
-router.post('/:id/list',ensureAuthenticated, function(req,res){
+
+
+
+
+
+
+router.post('/:id/list',ensureAuthenticated, async function(req,res){
   let body = req.body
   let item = JSON.parse(req.body.item)
   console.log(item)
@@ -119,18 +127,63 @@ router.post('/:id/list',ensureAuthenticated, function(req,res){
       console.log("added "+ listing.name+" from "+listing.seller)
     }
   })
-  res.redirect('/marketplace/listings')
+  let inventory = await Inventory.findOne({user:req.session.user}).exec()
+  if( inventory == null){
+    let newinv = new Inventory;
+    newinv.user = req.session.user
+    newinv.listings = listing;
+    newinv.save(function(err){
+      if(err){
+        console.log(err);
+        return;
+      } else{
+        console.log("created new inventory for "+req.session.user)
+      }
+    })
+  } else {
+    inventory.listings.push(listing)
+    inventory.save(function(err){
+      if(err){
+        console.log(err);
+        return;
+      } else{
+        console.log("pushed new listing")
+      }
+    })
+  }
+  res.redirect('/marketplace/marketdash')
 })
-router.post('/:id',function(req, res){
-  Listing.find({_id: req.params.id}, function(err, listings){
-    console.log(listings)
+router.post('/:id/buy',async function(req, res){
+  Listing.findOne({_id: req.params.id}, async function(err, listing){
+    console.log(await Inventory.findOne({user:req.session.user}).exec())
 
+    let inventory = await Inventory.findOne({user:req.session.user}).exec()
+    if(inventory == null){
+      let newinv = new Inventory;
+      newinv.user = req.session.user
+      newinv.purchases = listing;
+      newinv.save(function(err){
+        if(err){
+          console.log(err);
+          return;
+        } else{
+          console.log("created new inventory for "+req.session.user)
+        }
+      })
+    } else {
+      inventory.purchases.push(listing)
+      inventory.save(function(err){
+        if(err){
+          console.log(err);
+          return;
+        } else{
+          console.log("pushed new purchase")
+        }
+      })
+    }
+    Listing.findOneAndRemove({_id:req.params.id}).exec()
 
-    res.render('item', {
-      listings: listings,
-      user:req.session.user,
-      admin:req.session.admin,
-    });
+    res.redirect("/marketplace/marketdash")
   })
 })
 

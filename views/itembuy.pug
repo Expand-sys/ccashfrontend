@@ -6,15 +6,15 @@ block content
       .row 
         .col
           .card
-            img(src="/blockimages/items/"+item.itemId+"-"+item.meta+".png")
+            img(src="/blockimages/items/"+listings[0].itemId+"-"+listings[0].meta+".png")
         .col
           .row 
             .col-sm-2
               p Item:
               p ID: 
             .col-sm-4 
-              p #{item.name}
-              p #{item.itemId}-#{item.meta}
+              p #{listings[0].name}
+              p #{listings[0].itemId}-#{listings[0].meta}
             .col 
               h4 Buy
               .row 
