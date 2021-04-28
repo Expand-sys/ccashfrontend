@@ -4,9 +4,9 @@ block content
   .container
     .row
       each item in items
-        .col.col-xs-12.col-sm-2
+        .col.col-xs-12
           a(href="/marketplace/"+item._id)
-            .card(style="height: 130px;width:140px")
+            .card(style="height: 130px;width:140px;margin:10px")
               p #{item.name}
               img(src="/blockimages/items/"+item.itemId+"-"+item.meta+".png")
             br
