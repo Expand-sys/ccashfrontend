@@ -3,20 +3,52 @@ const router = express.Router();
 const path = require('path');
 const {ensureAuthenticated} = require("../config/auth.js")
 const {checkAdmin} = require ("../config/admin.js")
-var pug = require('pug');
+const pug = require('pug');
 const flash = require ('connect-flash');
 const expressValidator = require('express-validator');
 const session = require('express-session');
 const {postUser} = require('../helpers/functions.js')
 const got = require('got')
 const MemoryStore = require('memorystore')(session)
+const fs = require('fs');
+const mongoose = require('mongoose')
 console.log('Sen was here')
+
+
+
+
+
+function mongo(){
+  if(process.env.MONGO){
+    console.log(process.env.MONGO)
+    mongoose.connect(process.env.MONGO,{
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: true,
+    });
+
+    let db = mongoose.connection;
+    db.once('open', function(){
+      console.log('Connected to MongoDB');
+    })
+
+    //check for DB errors
+    db.on('error', function(err){
+      console.log(err);
+    });
+  }
+}
+
+
+
+
 
 
 router.get('/', checkAdmin, function(req, res){
   res.render('adminsettings', {
     user: req.session.user,
     admin: req.session.admin,
+    marketplace: process.env.MARKETPLACE
   })
 
 });
@@ -69,6 +101,7 @@ router.post('/user',checkAdmin , async function(req,res){
     user: req.session.user,
     admin: req.session.admin,
     successes: successes,
+    marketplace: process.env.MARKETPLACE
   })
 })
 
@@ -94,6 +127,7 @@ router.post('/baluser',checkAdmin , async function(req,res){
     admin: req.session.admin,
     successes: successes,
     errors: errors,
+    marketplace: process.env.MARKETPLACE
   })
 })
 
@@ -121,6 +155,7 @@ router.post('/bal',checkAdmin , async function(req,res){
     user: req.session.user,
     admin: req.session.admin,
     successes: successes,
+    marketplace: process.env.MARKETPLACE
   })
 })
 router.post('/userdelete', checkAdmin, async function(req,res){
@@ -152,6 +187,7 @@ router.post('/userdelete', checkAdmin, async function(req,res){
     admin: req.session.admin,
     successes: successes,
     errors: errors,
+    marketplace: process.env.MARKETPLACE
   })
 })
 router.post('/destroyallsessions', checkAdmin, async function(req,res) {
@@ -180,9 +216,40 @@ router.post('/destroyallsessions', checkAdmin, async function(req,res) {
       user: req.session.user,
       admin: req.session.admin,
       errors: errors,
+      marketplace: process.env.MARKETPLACE
     })
   }
 
+})
+
+
+
+
+router.post('/changebackend', checkAdmin, async function(req,res){
+  let {url} = req.body;
+  if(!url.endsWith('/')){
+    url = url+'/'
+  }
+  process.env.BANKAPIURL = url
+  fs.writeFileSync('.env', "BANKAPIURL="+process.env.BANKAPIURL+'\n'+"SECURE="+process.env.SECURE+'\n'+"MARKETPLACE="+process.env.MARKETPLACE+'\n'+"MONGO="+process.env.MONGO+'\nSETUP=true')
+  res.redirect('../')
+})
+router.post('/mongodb', checkAdmin, async function(req,res){
+  let {url} = req.body;
+  process.env.MONGO = url
+
+  if(process.env.MONGO.length < 3){
+    process.env.MARKETPLACE = false
+    console.log("false")
+  }else { process.env.MARKETPLACE = true;console.log("true")}
+  fs.writeFileSync('.env', "BANKAPIURL="+process.env.BANKAPIURL+'\n'+"SECURE="+process.env.SECURE+'\n'+"MARKETPLACE="+process.env.MARKETPLACE+'\n'+"MONGO="+process.env.MONGO+'\nSETUP=true')
+  try{
+    mongo()
+  }catch(e){
+    console.log(e)
+  }
+
+  res.redirect('../')
 })
 router.post('/close', checkAdmin, async function(req,res){
   let {attempt} = req.body;

@@ -1,0 +1,33 @@
+extends marketlayout
+
+
+block content
+  .container
+    .card
+      .row 
+        .col
+          .card
+            img(src="/blockimages/items/"+item.itemId+"-"+item.meta+".png")
+        .col
+          .row 
+            .col-sm-2
+              p Item:
+              p ID: 
+            .col-sm-2 
+              p #{item.name}
+              p #{item.itemId}-#{item.meta}
+            .col 
+              h4 Sell
+              form(method='POST', action='/marketplace/'+item._id+'/list')
+                label Selling Price:
+                br
+                input.form-control-lg.shadow(type="number" min="0" name="price")
+                br
+                br
+                label Amount: 
+                br
+                input.form-control-lg.shadow(type="number" min="0" name="amount")
+                br
+                br
+                input(type="hidden" value=item name="item")
+                input.btn.btn-primary(type='submit', value='Submit')

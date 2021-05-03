@@ -8,10 +8,10 @@ html
     link(rel='stylesheet' href='/css/style.css')
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
   body
-    nav.navbar.navbar-expand-lg.navbar-light.navbarrr.shadow-lg
+    nav.navbar.navbar-expand-lg.navbar-dark.navbarrr.shadow-lg
       .container
         a.navbar-brand(href='/')
-          img(src="../CCashLogo3.png" style="width:75px; height:74px")
+          img(src="/CCashLogo3.png" style="width:75px; height:74px")
         button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbars', aria-controls='navbars', aria-expanded='false', aria-label='Toggle navigation')
           span.navbar-toggler-icon
         #navbars.collapse.navbar-collapse
@@ -23,11 +23,17 @@ html
                 a.nav-link(href='/login').text-white Login
               li.nav-item
                 a.nav-link(href='/register').text-white Register
+            
             if user
               li.nav-item
                 a.nav-link(href='/logout').text-white Log out
               li.nav-item
-                a.nav-link(href='/BankF').text-white Bank Dashboard
+                a.nav-link(href='/BankF').text-white Bank
+              if marketplace
+                li.nav-item
+                  a.nav-link(href='/marketplace').text-white MarketPlace 
+                li.nav-item
+                  a.nav-link(href='/marketplace/marketdash').text-white MarketPlace-Dashboard
               li.nav-item
                 a.nav-link(href='/settings').text-white Settings
               if admin == true

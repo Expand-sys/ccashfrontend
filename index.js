@@ -14,6 +14,7 @@ const url = require('url')
 const dotenv = require('dotenv');
 const fs = require('fs');
 let Log = require('./schemas/log.js');
+const mongoose = require('mongoose')
 dotenv.config();
 //mongodb connection
 
@@ -64,25 +65,48 @@ app.use(expressValidator({
   }
 }));
 app.post('/setup', async function(req, res){
+
+
   console.log(req.body)
-  let mongo = req.body.mongo;
+  let {mongo, url, banksecure, marketplace} = req.body;
   process.env.MONGO = mongo
-  let apiurl = 'BANKAPIURL='+req.body.url
-  process.env.BANKAPIURL = req.body.url
-  let banksecure = 'SECURE=false'
+  process.env.MARKETPLACE = false
+  if(marketplace){
+    process.env.MARKETPLACE = true
+  }
+  if(!url.endsWith('/')){
+    url=url+"/"
+  }
+  process.env.BANKAPIURL =url
   process.env.SECURE = false
-  if(req.body.secure){
-    banksecure = 'SECURE=true'
-    process.env.SECURE = true
+  if(!banksecure){
+    banksecure = false
+    process.env.SECURE = false
   }
   process.env.SETUP = true
-  fs.writeFileSync('.env', apiurl+'\n'+banksecure+'\n'+mongo+'\nSETUP=true')
+  fs.writeFileSync('.env', "BANKAPIURL="+process.env.BANKAPIURL+'\n'+"SECURE="+process.env.SECURE+'\n'+"MARKETPLACE="+process.env.MARKETPLACE+'\n'+"MONGO="+process.env.MONGO+'\nSETUP=true')
   dotenv.config();
+  if(process.env.MARKETPLACE){
+    mongoose.connect(process.env.MONGO,{
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: true,
+    });
 
+    let db = mongoose.connection;
+    db.once('open', function(){
+      console.log('Connected to MongoDB');
+    })
+
+    //check for DB errors
+    db.on('error', function(err){
+      console.log(err);
+    });
+  }
   res.redirect('/')
 })
 app.get('/', async function(req, res){
-  if(setup==false){
+  if(!process.env.SETUP){
     res.render('setup')
   }else{
 
@@ -105,7 +129,8 @@ app.get('/', async function(req, res){
     res.render('index', {
       user: req.session.user,
       admin: req.session.admin,
-      alive: alive
+      alive: alive,
+      marketplace: process.env.MARKETPLACE
     })
   }
 });
@@ -153,8 +178,8 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
   console.log(logrec.timings)
   console.log("query finished "+Date.now())
   logsent = logsent.body.value
-  console.log(logsent)
-  if(logsent === 1 || logsent === -1 || logsent == null){
+
+  if(logsent == 1 || logsent == -1 || logsent == null){
     logsent = undefined
   }else{
     logsent = await logsent.filter(({ from }) => from === req.session.user)
@@ -180,6 +205,7 @@ app.get('/BankF', ensureAuthenticated, async function(req, res){
     user: req.session.user,
     admin: req.session.admin,
     sucesses: successes,
+    marketplace: process.env.MARKETPLACE
   })
 });
 
@@ -268,12 +294,14 @@ app.post('/sendfunds', async function(req, res){
       balance:balance.value,
       user: req.session.user,
       admin: req.session.admin,
+      marketplace: process.env.MARKETPLACE
     })
   }
 })
 
 app.post('/register', async function(req, res){
   var {name, password, password2} = req.body;
+
   let checkuser = await got(process.env.BANKAPIURL+'BankF/contains/'+name)
   checkuser = JSON.parse(checkuser.body).value
   let errors = [];
@@ -290,7 +318,8 @@ app.post('/register', async function(req, res){
     }
     if(errors[0]){
       res.render('register', {
-        errors:errors
+        errors:errors,
+        marketplace: process.env.MARKETPLACE
       })
     } else {
       if(postUser(name, password)){
@@ -298,6 +327,7 @@ app.post('/register', async function(req, res){
         res.render('login',{
           errors:errors,
           successes: successes,
+          marketplace: process.env.MARKETPLACE
         })
       }
     }
@@ -305,6 +335,7 @@ app.post('/register', async function(req, res){
     errors.push({msg: "User already exists"})
     res.render('register',{
       errors:errors,
+      marketplace: process.env.MARKETPLACE
     })
   }
 })
@@ -326,6 +357,7 @@ app.post('/login', async function(req, res){
   } catch(err){
     console.log(err)
   }
+  req.session.password = password
   if(adminTest.body.value == undefined){
     res.redirect('/')
   }else{
@@ -350,7 +382,8 @@ app.post('/login', async function(req, res){
       if(verified.body.value == 0){
         errors.push({msg: 'Password wrong'})
         res.render('login',{
-          errors:errors
+          errors:errors,
+          marketplace: process.env.MARKETPLACE
         })
       }else if(verified.body.value == 1){
         req.session.user = name;
@@ -359,7 +392,8 @@ app.post('/login', async function(req, res){
       } else {
         errors.push({msg: 'User not found'})
         res.render('login',{
-          errors:errors
+          errors:errors,
+          marketplace: process.env.MARKETPLACE
         })
       }
     }
@@ -377,13 +411,14 @@ app.use('/admin', admin);
 let settings = require('./routes/settings');
 app.use('/settings', settings)
 
-
-
+let marketplace = require('./routes/marketplace')
+app.use('/marketplace', marketplace)
 
 
 app.get('/logout', function(req, res){
   req.session.regenerate(function(err) {
     res.render('login', {
+      marketplace: process.env.MARKETPLACE
     })
   })
 });
@@ -393,6 +428,7 @@ app.get('/login', function(req, res){
   req.session.regenerate(function(err) {
     res.render('login', {
       user: req.session.user,
+      marketplace: process.env.MARKETPLACE
     })
   })
 });
@@ -401,6 +437,7 @@ app.get('/register', function(req, res){
   res.render('register', {
     user: req.session.user,
     admin: req.session.admin,
+    marketplace: process.env.MARKETPLACE
   })
 
 });
