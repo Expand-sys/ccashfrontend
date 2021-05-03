@@ -23,17 +23,15 @@ html
                 a.nav-link(href='/login').text-white Login
               li.nav-item
                 a.nav-link(href='/register').text-white Register
-            if marketplace == true
-              li.nav-item
-                a.nav-link(href='/marketplace').text-white MarketPlace
+            
             if user
               li.nav-item
                 a.nav-link(href='/logout').text-white Log out
               li.nav-item
                 a.nav-link(href='/BankF').text-white Bank
-              if marketplace == true 
+              if marketplace
                 li.nav-item
-                  a.nav-link(href='/marketplace').text-white MarketPlace
+                  a.nav-link(href='/marketplace').text-white MarketPlace 
                 li.nav-item
                   a.nav-link(href='/marketplace/marketdash').text-white MarketPlace-Dashboard
               li.nav-item

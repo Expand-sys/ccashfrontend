@@ -62,7 +62,20 @@ router.get('/', function(req, res) {
 
 
 router.get('/marketdash', ensureAuthenticated, function(req,res){
-  Inventory.findOne({user:req.session.user}, function(err, inventory){
+  Inventory.findOne({user:req.session.user}, async function(err, inventory){
+    if(!inventory){
+      let newinv = new Inventory;
+      newinv.user = req.session.user
+      newinv.save(function(err){
+        if(err){
+          console.log(err);
+          return;
+        } else{
+          console.log("created new inventory for "+req.session.user)
+        }
+      })
+    }
+    setTimeout(500);
     res.render('marketdash',{
       user:req.session.user,
       admin:req.session.admin,
