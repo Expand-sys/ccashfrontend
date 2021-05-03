@@ -75,7 +75,7 @@ router.get('/marketdash', ensureAuthenticated, function(req,res){
         }
       })
     }
-    setTimeout(500);
+
     res.render('marketdash',{
       user:req.session.user,
       admin:req.session.admin,
@@ -181,7 +181,6 @@ router.post('/:id/list',ensureAuthenticated, async function(req,res){
 })
 router.post('/:id/buy',async function(req, res){
   Listing.findOne({_id: req.params.id}, async function(err, listing){
-    console.log(await Inventory.findOne({user:req.session.user}).exec())
 
     let inventory = await Inventory.findOne({user:req.session.user}).exec()
     if(inventory == null){
@@ -208,7 +207,15 @@ router.post('/:id/buy',async function(req, res){
       })
     }
     Listing.findOneAndRemove({_id:req.params.id}).exec()
-
+    transfer = got.post(process.env.BANKAPIURL+'BankF/sendfunds',{
+      json:{
+        a_name: req.session.user,
+        b_name: listing.seller,
+        amount: parseInt(listing.amount*listing.price),
+        attempt: req.session.password
+      },
+      responseType:'json'
+    })
     res.redirect("/marketplace/marketdash")
   })
 })

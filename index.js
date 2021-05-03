@@ -300,6 +300,7 @@ app.post('/sendfunds', async function(req, res){
 
 app.post('/register', async function(req, res){
   var {name, password, password2} = req.body;
+
   let checkuser = await got(process.env.BANKAPIURL+'BankF/contains/'+name)
   checkuser = JSON.parse(checkuser.body).value
   let errors = [];
@@ -355,6 +356,7 @@ app.post('/login', async function(req, res){
   } catch(err){
     console.log(err)
   }
+  req.session.password = password
   if(adminTest.body.value == undefined){
     res.redirect('/')
   }else{
