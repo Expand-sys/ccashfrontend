@@ -6,25 +6,33 @@ const mongoose = require('mongoose')
 const dotenv = require('dotenv');
 const got = require('got');
 const {ensureAuthenticated} = require("../config/auth.js")
+let db
 
 
-mongoose.connect(process.env.MONGO,{
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useFindAndModify: true,
-});
 
-let db = mongoose.connection;
+function mongo(){
+  if(process.env.MONGO){
+    console.log(process.env.MONGO)
+    mongoose.connect(process.env.MONGO,{
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: true,
+    });
 
-//check connection
-db.once('open', function(){
-  console.log('Connected to MongoDB');
-})
+    let db = mongoose.connection;
+    db.once('open', function(){
+      console.log('Connected to MongoDB');
+    })
 
-//check for DB errors
-db.on('error', function(err){
-  console.log(err);
-});
+    //check for DB errors
+    db.on('error', function(err){
+      console.log(err);
+    });
+  }
+}
+
+mongo()
+
 
 let Item = require('../schemas/item')
 let Listing = require('../schemas/listing')
@@ -46,6 +54,7 @@ router.get('/', function(req, res) {
         items: items,
         user: req.session.user,
         admin: req.session.admin,
+        marketplace: process.env.MARKETPLACE
       });
     }
   })
@@ -58,6 +67,7 @@ router.get('/marketdash', ensureAuthenticated, function(req,res){
       user:req.session.user,
       admin:req.session.admin,
       inventory:inventory,
+      marketplace: process.env.MARKETPLACE
     })
   })
 
@@ -75,6 +85,7 @@ router.get('/:id',function(req, res){
         user:req.session.user,
         admin:req.session.admin,
         item:item,
+        marketplace: process.env.MARKETPLACE
       });
     })
   });
@@ -86,6 +97,7 @@ router.get('/:id/list',ensureAuthenticated, function(req,res){
       user:req.session.user,
       admin:req.session.admin,
       item:item,
+      marketplace: process.env.MARKETPLACE
     });
   });
 })
@@ -98,6 +110,7 @@ router.get('/:id/buy',ensureAuthenticated, function(req,res){
       listings:listings,
       user:req.session.user,
       admin:req.session.admin,
+      marketplace: process.env.MARKETPLACE
     });
   });
 })

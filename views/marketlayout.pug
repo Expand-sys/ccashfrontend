@@ -30,10 +30,11 @@ html
                 a.nav-link(href='/logout').text-white Log out
               li.nav-item
                 a.nav-link(href='/BankF').text-white Bank
-              li.nav-item
-                a.nav-link(href='/marketplace').text-white MarketPlace
-              li.nav-item
-                a.nav-link(href='/marketplace/marketdash').text-white MarketPlace-Dashboard
+              if marketplace == true 
+                li.nav-item
+                  a.nav-link(href='/marketplace').text-white MarketPlace
+                li.nav-item
+                  a.nav-link(href='/marketplace/marketdash').text-white MarketPlace-Dashboard
               li.nav-item
                 a.nav-link(href='/settings').text-white Settings
               if admin == true

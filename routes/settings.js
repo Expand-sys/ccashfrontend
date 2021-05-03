@@ -40,6 +40,7 @@ router.post('/pass', ensureAuthenticated, async function(req, res){
       errors:errors,
       user: req.session.user,
       admin: req.session.admin,
+      marketplace: process.env.MARKETPLACE
     })
   }
   try{
@@ -62,6 +63,7 @@ router.post('/pass', ensureAuthenticated, async function(req, res){
     res.render('login', {
       successes: successes,
       errors:errors,
+      marketplace: process.env.MARKETPLACE
     })
   })
 })

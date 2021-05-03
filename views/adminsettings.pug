@@ -58,6 +58,27 @@ block content
           input.btn.btn-primary(type='submit',value='Submit')
       br
       .card.shadow-lg
+        h4 Change backend URL
+        form(method='POST', action='/admin/changebackend')
+          #form-group
+            p WARNING DO NOT PUT WRONG URL IN YOU WILL BREAK AND HAVE TO DELETE .ENV FILE TO FIX
+            p This will change the backend that is being used by the front end
+            label Enter URL of new BankAPI including trailing slash
+            input.form-control(name='url', type='url')
+          br
+          input.btn.btn-warning(type='submit',value='Submit')
+      br
+      .card.shadow-lg
+        h4 Change backend  Mongodb URL
+        form(method='POST', action='/admin/mongodb')
+          #form-group
+            p WARNING DO NOT PUT WRONG URL IN YOU WILL BREAK AND HAVE TO DELETE .ENV FILE TO FIX
+            label Enter URL of new MongoDB or enter a space to turn off marketplace
+            input.form-control(name='url', type='text')
+          br
+          input.btn.btn-warning(type='submit',value='Submit')
+      br
+      .card.shadow-lg
         h4 Destroy All Sessions
         form(method='POST', action='/admin/destroyallsessions')
           #form-group
