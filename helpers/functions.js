@@ -3,8 +3,9 @@ const got = require('got');
 
 
 async function postUser(name, password){
+  console.log(process.env.BANKAPIURL)
   try{
-    const {body} = await got.post('https://ccash.ryzerth.com/BankF/user',{
+    const {body} = await got.post(process.env.BANKAPIURL+'BankF/user',{
         json:{
           name: name,
           init_pass: password
@@ -16,9 +17,6 @@ async function postUser(name, password){
   } catch(err){
     console.log(err)
   }
-
-  console.log(body)
-  return body.value
 }
 
 
