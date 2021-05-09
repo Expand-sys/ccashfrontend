@@ -1,35 +1,34 @@
-const mongoose = require('mongoose');
-
+const mongoose = require("mongoose");
 
 const ListingSchema = mongoose.Schema({
-  itemId:{
+  itemId: {
     type: Number,
     required: true,
   },
-  meta:{
+  meta: {
     type: Number,
-    required: false
+    required: false,
   },
-  name:{
-    type: String,
-    required: true
-  },
-  foreignid:{
+  name: {
     type: String,
     required: true,
   },
-  price:{
-    type:Number,
-    required: true
+  foreignid: {
+    type: String,
+    required: true,
   },
-  amount:{
+  price: {
     type: Number,
-    required:true
+    required: true,
   },
-  seller:{
-    type:String,
-    required:true,
-  }
-})
+  amount: {
+    type: Number,
+    required: true,
+  },
+  seller: {
+    type: String,
+    required: true,
+  },
+});
 
-const Listing = module.exports = mongoose.model('Listing', ListingSchema);
+const Listing = (module.exports = mongoose.model("Listing", ListingSchema));
