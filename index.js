@@ -210,6 +210,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   console.log(logrec.timings);
   console.log("query finished " + Date.now());
   logsent = logsent.body.value;
+  console.log(logsent);
 
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
@@ -223,10 +224,12 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     logrec = await logrec.filter(({ to }) => to === req.session.user);
   }
   for (i in logrec) {
-    logrec[i].time = Date(logrec[i].time);
+    logrec[i].time = new Date(logrec[i].time);
+    console.log(logrec[i].time);
   }
   for (i in logsent) {
-    logsent[i].time = Date(logsent[i].time);
+    logsent[i].time = new Date(logsent[i].time);
+    console.log(logsent[i].time);
   }
   console.log("begin render " + Date.now());
   res.render("bankf", {
