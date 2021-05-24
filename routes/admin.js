@@ -143,7 +143,7 @@ router.post("/bal", checkAdmin, async function (req, res) {
   } catch (err) {
     console.log(err);
   }
-  if (patch.body.value == true) {
+  if ((await patch.body.value) == true) {
     successes.push({ msg: "Change Funds Successful" });
   }
   res.render("adminsettings", {

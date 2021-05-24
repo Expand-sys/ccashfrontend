@@ -16,7 +16,6 @@ const fs = require("fs");
 let Log = require("./schemas/log.js");
 const mongoose = require("mongoose");
 dotenv.config();
-//mongodb connection
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
@@ -235,10 +234,12 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     logrec = await logrec.filter(({ to }) => to === req.session.user);
   }
   for (i in logrec) {
-    logrec[i].time = Date(logrec[i].time);
+    logrec[i].time = new Date(logrec[i].time);
+    console.log(logrec[i].time);
   }
   for (i in logsent) {
-    logsent[i].time = Date(logsent[i].time);
+    logsent[i].time = new Date(logsent[i].time);
+    console.log(logsent[i].time);
   }
   console.log("begin render " + Date.now());
   res.render("bankf", {
@@ -469,6 +470,7 @@ app.get("/logout", function (req, res) {
     res.render("login", {
       marketplace: process.env.MARKETPLACE,
       random: papy(),
+
     });
   });
 });

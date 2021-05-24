@@ -1,26 +1,19 @@
-const got = require('got');
+const got = require("got");
 
-
-
-async function postUser(name, password){
-  try{
-    const {body} = await got.post('https://ccash.ryzerth.com/BankF/user',{
-        json:{
-          name: name,
-          init_pass: password
-        },
-        responseType:'json'
-
-    })
-    return body
-  } catch(err){
-    console.log(err)
+async function postUser(name, password) {
+  console.log(process.env.BANKAPIURL);
+  try {
+    const { body } = await got.post(process.env.BANKAPIURL + "BankF/user", {
+      json: {
+        name: name,
+        init_pass: password,
+      },
+      responseType: "json",
+    });
+    return body;
+  } catch (err) {
+    console.log(err);
   }
-
-  console.log(body)
-  return body.value
 }
 
-
-
-module.exports = { postUser }
+module.exports = { postUser };

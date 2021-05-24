@@ -1,24 +1,23 @@
-const mongoose = require('mongoose');
-
+const mongoose = require("mongoose");
 
 const LogSchema = mongoose.Schema({
-  sender:{
+  sender: {
     type: String,
     required: true,
   },
-  receiver:{
+  receiver: {
     type: String,
-    required: true
+    required: true,
   },
-  amount:{
+  amount: {
     type: Number,
-    required: true
+    required: true,
   },
-  date:{
-    type:Date,
+  date: {
+    type: Date,
     default: Date(),
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const Log = module.exports = mongoose.model('Log', LogSchema);
+const Log = (module.exports = mongoose.model("Log", LogSchema));

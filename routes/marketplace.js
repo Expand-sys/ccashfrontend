@@ -110,7 +110,6 @@ router.get("/:id/list", ensureAuthenticated, function (req, res) {
       admin: req.session.admin,
       item: item,
       marketplace: process.env.MARKETPLACE,
-      random: papy(),
     });
   });
 });
@@ -123,7 +122,6 @@ router.get("/:id/buy", ensureAuthenticated, function (req, res) {
       user: req.session.user,
       admin: req.session.admin,
       marketplace: process.env.MARKETPLACE,
-      random: papy(),
     });
   });
 });
@@ -235,6 +233,7 @@ router.post("/:id/buy", async function (req, res) {
     })
   }
 })*/
+
 function papy() {
   const rndInt = Math.floor(Math.random() * 1337);
   let random = false;
@@ -243,4 +242,5 @@ function papy() {
   }
   return random;
 }
+
 module.exports = router;
