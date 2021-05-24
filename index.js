@@ -131,6 +131,16 @@ app.post("/setup", async function (req, res) {
   }
   res.redirect("/");
 });
+
+function papy() {
+  const rndInt = Math.floor(Math.random() * 1337);
+  let random = false;
+  if (rndInt == 420) {
+    random = true;
+  }
+  return random;
+}
+
 app.get("/", async function (req, res) {
   if (!process.env.SETUP) {
     res.render("setup");
@@ -155,6 +165,7 @@ app.get("/", async function (req, res) {
       admin: req.session.admin,
       alive: alive,
       marketplace: process.env.MARKETPLACE,
+      random: papy(),
     });
   }
 });
@@ -210,7 +221,6 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   console.log(logrec.timings);
   console.log("query finished " + Date.now());
   logsent = logsent.body.value;
-  console.log(logsent);
 
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
@@ -241,6 +251,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     admin: req.session.admin,
     sucesses: successes,
     marketplace: process.env.MARKETPLACE,
+    random: papy(),
   });
 });
 
@@ -336,6 +347,7 @@ app.post("/sendfunds", async function (req, res) {
       user: req.session.user,
       admin: req.session.admin,
       marketplace: process.env.MARKETPLACE,
+      random: papy(),
     });
   }
 });
@@ -369,6 +381,7 @@ app.post("/register", async function (req, res) {
           errors: errors,
           successes: successes,
           marketplace: process.env.MARKETPLACE,
+          random: papy(),
         });
       }
     }
@@ -377,6 +390,7 @@ app.post("/register", async function (req, res) {
     res.render("register", {
       errors: errors,
       marketplace: process.env.MARKETPLACE,
+      random: papy(),
     });
   }
 });
@@ -422,6 +436,7 @@ app.post("/login", async function (req, res) {
         res.render("login", {
           errors: errors,
           marketplace: process.env.MARKETPLACE,
+          random: papy(),
         });
       } else if (verified.body.value == 1) {
         req.session.user = name;
@@ -432,6 +447,7 @@ app.post("/login", async function (req, res) {
         res.render("login", {
           errors: errors,
           marketplace: process.env.MARKETPLACE,
+          random: papy(),
         });
       }
     }
@@ -453,6 +469,8 @@ app.get("/logout", function (req, res) {
   req.session.regenerate(function (err) {
     res.render("login", {
       marketplace: process.env.MARKETPLACE,
+      random: papy(),
+
     });
   });
 });
@@ -462,6 +480,7 @@ app.get("/login", function (req, res) {
     res.render("login", {
       user: req.session.user,
       marketplace: process.env.MARKETPLACE,
+      random: papy(),
     });
   });
 });
@@ -471,6 +490,7 @@ app.get("/register", function (req, res) {
     user: req.session.user,
     admin: req.session.admin,
     marketplace: process.env.MARKETPLACE,
+    random: papy(),
   });
 });
 
