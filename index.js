@@ -219,7 +219,11 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     console.log(e);
   }
   console.log("query finished " + Date.now());
-  logsent = logsent.body.value;
+  try {
+    logsent = logsent.body.value;
+  } catch (e) {
+    console.log(e);
+  }
 
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
@@ -469,7 +473,6 @@ app.get("/logout", function (req, res) {
     res.render("login", {
       marketplace: process.env.MARKETPLACE,
       random: papy(),
-
     });
   });
 });
