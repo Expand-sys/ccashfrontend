@@ -40,6 +40,7 @@ router.get("/", checkAdmin, function (req, res) {
     user: req.session.user,
     admin: req.session.admin,
     marketplace: process.env.MARKETPLACE,
+    random: papy(),
   });
 });
 
@@ -91,6 +92,7 @@ router.post("/user", checkAdmin, async function (req, res) {
     admin: req.session.admin,
     successes: successes,
     marketplace: process.env.MARKETPLACE,
+    random: papy(),
   });
 });
 
@@ -118,6 +120,7 @@ router.post("/baluser", checkAdmin, async function (req, res) {
     successes: successes,
     errors: errors,
     marketplace: process.env.MARKETPLACE,
+    random: papy(),
   });
 });
 
@@ -148,6 +151,7 @@ router.post("/bal", checkAdmin, async function (req, res) {
     admin: req.session.admin,
     successes: successes,
     marketplace: process.env.MARKETPLACE,
+    random: papy(),
   });
 });
 router.post("/userdelete", checkAdmin, async function (req, res) {
@@ -180,6 +184,7 @@ router.post("/userdelete", checkAdmin, async function (req, res) {
     successes: successes,
     errors: errors,
     marketplace: process.env.MARKETPLACE,
+    random: papy(),
   });
 });
 router.post("/destroyallsessions", checkAdmin, async function (req, res) {
@@ -209,6 +214,7 @@ router.post("/destroyallsessions", checkAdmin, async function (req, res) {
       admin: req.session.admin,
       errors: errors,
       marketplace: process.env.MARKETPLACE,
+      random: papy(),
     });
   }
 });
@@ -281,5 +287,12 @@ router.post("/close", checkAdmin, async function (req, res) {
   });
   res.redirect("../");
 });
-
+function papy() {
+  const rndInt = Math.floor(Math.random() * 1337);
+  let random = false;
+  if (rndInt == 420) {
+    random = true;
+  }
+  return random;
+}
 module.exports = router;

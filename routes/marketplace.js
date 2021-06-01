@@ -52,6 +52,7 @@ router.get("/", function (req, res) {
         user: req.session.user,
         admin: req.session.admin,
         marketplace: process.env.MARKETPLACE,
+        random: papy(),
       });
     }
   });
@@ -80,6 +81,7 @@ router.get("/marketdash", ensureAuthenticated, function (req, res) {
       admin: req.session.admin,
       inventory: inventory,
       marketplace: process.env.MARKETPLACE,
+      random: papy(),
     });
   });
 });
@@ -95,6 +97,7 @@ router.get("/:id", function (req, res) {
         admin: req.session.admin,
         item: item,
         marketplace: process.env.MARKETPLACE,
+        random: papy(),
       });
     });
   });
@@ -230,5 +233,14 @@ router.post("/:id/buy", async function (req, res) {
     })
   }
 })*/
+
+function papy() {
+  const rndInt = Math.floor(Math.random() * 1337);
+  let random = false;
+  if (rndInt == 420) {
+    random = true;
+  }
+  return random;
+}
 
 module.exports = router;

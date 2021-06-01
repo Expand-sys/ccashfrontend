@@ -1,0 +1,129 @@
+@font-face {
+  font-family: "PapyrusW01";
+  src: url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.eot");
+  src: url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.eot?#iefix")
+      format("embedded-opentype"),
+    url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.woff2")
+      format("woff2"),
+    url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.woff")
+      format("woff"),
+    url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.ttf")
+      format("truetype"),
+    url("//db.onlinewebfonts.com/t/a0e1b1883c0cf520e9c50d0cd91cd0d0.svg#PapyrusW01")
+      format("svg");
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100vh;
+}
+body {
+  background: #f4da46;
+  height: 100vh;
+  background-attachment: fixed;
+}
+.navbarrr {
+  background: #bc5b0b;
+}
+.blue {
+  background: #46cff2;
+}
+.container-large {
+  padding-left: 10%;
+  padding-right: 10%;
+}
+.col {
+  padding: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+.card {
+  padding: 10px;
+}
+.row {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+.logo {
+  width: 250px;
+  background-color: white;
+}
+.logs {
+  height: 350px;
+  overflow: auto;
+}
+
+.content {
+  flex-grow: 1;
+}
+
+.gallery {
+  background-color: white;
+  margin-bottom: 50px;
+  box-shadow: 10px 10px 5px black;
+}
+
+.bg-custom {
+  background-color: #130f40;
+}
+.button-fixed {
+  bottom: 0;
+  position: fixed;
+  right: 0;
+  border-radius: 4px;
+}
+.fas {
+  cursor: pointer;
+  font-size: 24px;
+}
+p {
+  font-size: 14px;
+}
+
+.text-black {
+  color: black;
+}
+.text-white {
+  color: white;
+}
+.form-check-input {
+  margin-left: 0;
+  padding: inherit;
+}
+
+input[type="radio"]:checked ~ .reveal-if-active,
+input[type="checkbox"]:checked ~ .reveal-if-active {
+  opacity: 1;
+  max-height: 100px; /* little bit of a magic number :( */
+  overflow: visible;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+label {
+  font-family: "PapyrusW01";
+}
+
+h1 {
+  color: white;
+}
+.shadow {
+  box-shadow: 5px 10px #888888;
+}
+$w: Min(10em, 100%);
+
+.grid--masonry {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, $w);
+
+  > * {
+    width: $w;
+  }
+}

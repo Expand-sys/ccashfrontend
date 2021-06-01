@@ -40,6 +40,7 @@ router.post("/pass", ensureAuthenticated, async function (req, res) {
       user: req.session.user,
       admin: req.session.admin,
       marketplace: process.env.MARKETPLACE,
+      random: papy(),
     });
   }
   try {
@@ -63,8 +64,17 @@ router.post("/pass", ensureAuthenticated, async function (req, res) {
       successes: successes,
       errors: errors,
       marketplace: process.env.MARKETPLACE,
+      random: papy(),
     });
   });
 });
+function papy() {
+  const rndInt = Math.floor(Math.random() * 1337);
+  let random = false;
+  if (rndInt == 420) {
+    random = true;
+  }
+  return random;
+}
 
 module.exports = router;
