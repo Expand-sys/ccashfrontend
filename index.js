@@ -219,11 +219,8 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     console.log(e);
   }
   console.log("query finished " + Date.now());
-  try {
-    logsent = logsent.body.value;
-  } catch (e) {
-    console.log(e);
-  }
+
+  logsent = logsent.body.value;
 
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
