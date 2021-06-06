@@ -174,6 +174,8 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   if (req.session.sucess == true) {
     successes.push({ msg: "Transfer successful" });
   }
+  let errors = req.session.errors;
+  req.session.errors = [];
   let admin;
   try {
     admin = req.session.admin;
@@ -205,29 +207,29 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   } catch (e) {
     console.log(e);
   }
-  try {
-    logrec = await got.post(
-      process.env.BANKAPIURL + "BankF/" + req.session.user + "/log",
-      {
-        json: {
-          attempt: req.session.password,
-        },
-        responseType: "json",
-      }
-    );
-  } catch (e) {
-    console.log(e);
-  }
   console.log("query finished " + Date.now());
-
   logsent = logsent.body.value;
+  logrec = logsent;
+  let graphlog = logsent.reverse();
+  console.log(graphlog);
+  let graphdata = '["transaction", "balance"]';
+  let currentbal = balance.value;
+  for (i in graphlog) {
+    if (graphlog[i].from == req.session.user) {
+      currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
+      graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+    } else {
+      currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
+      graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+    }
+  }
 
+  console.log(graphdata);
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
   } else {
     logsent = await logsent.filter(({ from }) => from === req.session.user);
   }
-  logrec = logrec.body.value;
   if (logrec === 1 || logrec === -1 || logrec === null) {
     logrec = undefined;
   } else {
@@ -235,14 +237,16 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   }
   for (i in logrec) {
     logrec[i].time = new Date(logrec[i].time);
-    console.log(logrec[i].time);
   }
   for (i in logsent) {
     logsent[i].time = new Date(logsent[i].time);
-    console.log(logsent[i].time);
   }
+  let maxgraph = balance + 1000;
+  maxgraph = maxgraph * 3;
   console.log("begin render " + Date.now());
   res.render("bankf", {
+    maxgraph: maxgraph,
+    graphdata: graphdata,
     logrec: logrec,
     logsent: logsent,
     user: req.session.user,
@@ -250,6 +254,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     user: req.session.user,
     admin: req.session.admin,
     sucesses: successes,
+    errors: errors,
     marketplace: process.env.MARKETPLACE,
     random: papy(),
   });
@@ -268,7 +273,7 @@ app.post("/sendfunds", async function (req, res) {
   let { amount, name, senderpass } = req.body;
   let a_name = req.session.user;
   let successes = [];
-  let errors = [];
+  req.session.errors = [];
   let result = {};
   result = await got.post(process.env.BANKAPIURL + "BankF/sendfunds", {
     json: {
@@ -279,77 +284,16 @@ app.post("/sendfunds", async function (req, res) {
     },
     responseType: "json",
   });
+
   if (result.body.value == true || result.body.value) {
     req.session.success = true;
     //post details
     res.redirect("/BankF");
   } else {
-    errors.push({ msg: "Transfer Unsuccessful" });
-
-    let logsent;
-    let logrec;
-
-    try {
-      logsent = await got.post(
-        process.env.BANKAPIURL + "BankF/" + req.session.user + "/log",
-        {
-          json: {
-            attempt: req.session.password,
-          },
-          responseType: "json",
-        }
-      );
-    } catch (e) {
-      console.log(e);
-    }
-    try {
-      logrec = await got.post(
-        process.env.BANKAPIURL + "BankF/" + req.session.user + "/log",
-        {
-          json: {
-            attempt: req.session.password,
-          },
-          responseType: "json",
-        }
-      );
-    } catch (e) {
-      console.log(e);
-    }
-
-    logsent = logsent.body.value;
-    console.log(logsent);
-    if (logsent == 1 || logsent == -1 || logsent == null) {
-      logsent = undefined;
-    } else {
-      logsent = await logsent.filter(({ from }) => from === req.session.user);
-    }
-    logrec = logrec.body.value;
-    if (logrec == 1 || logrec == -1 || logrec == null) {
-      logrec = undefined;
-    } else {
-      logrec = await logrec.filter(({ to }) => to === req.session.user);
-    }
-    for (i in logrec) {
-      let d = new Date(logrec[i].time);
-      logrec[i].time = d;
-    }
-    for (i in logsent) {
-      let d = new Date(logsent[i].time);
-      logsent[i].time = d;
-    }
-
-    res.render("bankf", {
-      logsent: logsent,
-      logrec: logrec,
-      errors: errors,
-      successes: successes,
-      balance: balance.value,
-      user: req.session.user,
-      admin: req.session.admin,
-      marketplace: process.env.MARKETPLACE,
-      random: papy(),
-    });
+    req.session.errors.push({ msg: "Transfer Unsuccessful" });
   }
+
+  res.redirect("/bankf");
 });
 
 app.post("/register", async function (req, res) {

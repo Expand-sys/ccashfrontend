@@ -38,6 +38,8 @@ block content
                 a.nav-link.active.text-black(href='#sent', role='tab', aria-controls='sent', aria-selected='true') Sent
               li.nav-item
                 a.nav-link.text-black(href='#received', role='tab', aria-controls='recieved', aria-selected='false') Recieved
+              li.nav-item
+                a.nav-link.text-black(href='#balhistory', role='tab', aria-controls='balhistory', aria-selected='false') Balance History
             .tab-content.mt-3
               #sent.tab-pane.active(role='tabpanel')
                 .logs
@@ -55,6 +57,28 @@ block content
                       p Date: #{log.time}
                       p #{log.from} sent you $#{log.amount}
                       hr
+                        
+              #balhistory.tab-pane(role='tabpanel', aria-labelledby='contact-tab')
+                #chart_div
+                
+                script(type='text/javascript' src='https://www.gstatic.com/charts/loader.js')
+                script(type='text/javascript').
+                  
+                  google.charts.load('current', {'packages':['corechart']});
+                  google.charts.setOnLoadCallback(drawChart);
+                  function drawChart() {
+                    var data = google.visualization.arrayToDataTable([!{graphdata}]);
 
-        
+                    var options = {
+                      title: 'Balance',
+                      hAxis: {title: 'Transaction', minValue: 0, maxValue: 15, direction: -1, textPosition: 'none'},
+                      vAxis: {title: 'Balance', minValue: 0, maxValue: 500},
+                      legend: 'none'
+                    };
+
+                    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+
+                    chart.draw(data, options);
+                  }
+
     br
