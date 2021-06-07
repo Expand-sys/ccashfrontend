@@ -192,7 +192,6 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     console.log(err);
   }
   let logsent;
-  let logrec;
   console.log("start " + Date.now());
   try {
     logsent = await got.post(
@@ -209,8 +208,9 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   }
   console.log("query finished " + Date.now());
   logsent = logsent.body.value;
-  logrec = logsent;
-  let graphlog = logsent.reverse();
+  let logrec = logsent;
+  let graphlog = logsent;
+  graphlog = graphlog.reverse();
   console.log(graphlog);
   let graphdata = '["transaction", "balance"]';
   let currentbal = balance.value;
@@ -223,8 +223,6 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
       graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
     }
   }
-
-  console.log(graphdata);
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
   } else {
