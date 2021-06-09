@@ -210,7 +210,12 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   logsent = logsent.body.value;
   let logrec = logsent;
   let graphlog = logsent;
-  graphlog = graphlog.reverse();
+  try {
+    graphlog = graphlog.reverse();
+  } catch (e) {
+    console.log(e);
+  }
+
   console.log(graphlog);
   let graphdata = '["transaction", "balance"]';
   let currentbal = balance.value;
