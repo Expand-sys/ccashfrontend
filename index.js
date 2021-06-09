@@ -211,8 +211,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   let logrec = logsent;
   let graphlog = logsent;
   graphlog = graphlog.reverse();
-  console.log(graphlog);
-  let graphdata = '["transaction", "balance"]';
+  let graphdata = "";
   let currentbal = balance.value;
   for (i = graphlog.length - 1; i > -1; i--) {
     if (graphlog[i].from == req.session.user) {
@@ -223,6 +222,11 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
       graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
     }
   }
+  graphdata =
+    ", [" + parseInt(graphlog.length) + "," + balance.value + "]" + graphdata;
+  console.log(balance);
+  graphdata = '["transaction", "balance"]' + graphdata;
+  console.log(JSON.stringify(graphdata));
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
   } else {
@@ -233,20 +237,23 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   } else {
     logrec = await logrec.filter(({ to }) => to === req.session.user);
   }
-  for (i in logrec) {
-    logrec[i].time = new Date(logrec[i].time);
+  if (logsent) {
+    for (i in logrec) {
+      logrec[i].time = new Date(logrec[i].time);
+    }
   }
-  for (i in logsent) {
-    logsent[i].time = new Date(logsent[i].time);
+  if (logrec) {
+    for (i in logsent) {
+      logsent[i].time = new Date(logsent[i].time);
+    }
   }
   let maxgraph = balance + 1000;
-  maxgraph = maxgraph * 3;
   console.log("begin render " + Date.now());
   res.render("bankf", {
     maxgraph: maxgraph,
     graphdata: graphdata,
-    logrec: logrec,
-    logsent: logsent,
+    logrec: logrec.reverse(),
+    logsent: logsent.reverse(),
     user: req.session.user,
     balance: balance.value,
     user: req.session.user,
@@ -289,9 +296,8 @@ app.post("/sendfunds", async function (req, res) {
     res.redirect("/BankF");
   } else {
     req.session.errors.push({ msg: "Transfer Unsuccessful" });
+    res.redirect("/Bankf");
   }
-
-  res.redirect("/bankf");
 });
 
 app.post("/register", async function (req, res) {
