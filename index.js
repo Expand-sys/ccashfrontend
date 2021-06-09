@@ -219,15 +219,20 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   console.log(graphlog);
   let graphdata = '["transaction", "balance"]';
   let currentbal = balance.value;
-  for (i = graphlog.length - 1; i > -1; i--) {
-    if (graphlog[i].from == req.session.user) {
-      currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
-      graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
-    } else {
-      currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
-      graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+  if (graphlog) {
+    for (i = graphlog.length - 1; i > -1; i--) {
+      if (graphlog[i].from == req.session.user) {
+        currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
+        graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+      } else {
+        currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
+        graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+      }
     }
+  } else {
+    graphlog = undefined;
   }
+
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
   } else {
