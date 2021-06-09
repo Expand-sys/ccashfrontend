@@ -59,7 +59,7 @@ block content
                       hr
                         
               #balhistory.tab-pane(role='tabpanel', aria-labelledby='contact-tab')
-                #chart_div
+                #chart_div(style="width:100%; height 100%")
                 
                 script(type='text/javascript' src='https://www.gstatic.com/charts/loader.js')
                 script(type='text/javascript').
@@ -73,7 +73,9 @@ block content
                       title: 'Balance',
                       hAxis: {title: 'Transaction', minValue: 0, maxValue: 15, direction: 1, textPosition: 'none'},
                       vAxis: {title: 'Balance', minValue: 0, maxValue: 500},
-                      legend: 'none'
+                      legend: 'none',
+                      width: 670,
+                      height: 350
                     };
 
                     var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
