@@ -11,7 +11,14 @@ const { postUser } = require("../helpers/functions.js");
 const got = require("got");
 
 router.get("/", ensureAuthenticated, function (req, res) {
+  let successes = req.session.successes;
+  req.session.successes = [];
+  let errors = req.session.errors;
+  req.session.errors = [];
+
   res.render("settings", {
+    errors: errors,
+    successes: successes,
     user: req.session.user,
     admin: req.session.admin,
   });
@@ -20,61 +27,52 @@ router.get("/", ensureAuthenticated, function (req, res) {
 router.post("/pass", ensureAuthenticated, async function (req, res) {
   let { attempt, new_pass, password2 } = req.body;
   let patch;
-  let successes = [];
-  let errors = [];
   if (!attempt || !new_pass || !password2) {
-    errors.push({ msg: "please fill in all fields" });
+    req.session.errors.push({ msg: "please fill in all fields" });
   }
   //check if match
-  if (new_pass !== password2) {
-    errors.push({ msg: "Passwords don't match" });
+  if (new_pass != password2) {
+    req.session.errors.push({ msg: "Passwords don't match" });
   }
 
   //check if password is more than 6 characters
   if (new_pass.length < 6) {
-    errors.push({ msg: "Password must be at least 6 characters" });
+    req.session.errors.push({ msg: "Password must be at least 6 characters" });
   }
-  if (errors[0]) {
-    res.render("settings", {
-      errors: errors,
-      user: req.session.user,
-      admin: req.session.admin,
-      marketplace: process.env.MARKETPLACE,
-      random: papy(),
-    });
+  if (req.session.errors.length > 0) {
+    console.log(req.session.errors);
+    res.redirect("/settings");
+  } else {
+    try {
+      patch = await got.patch(process.env.BANKAPIURL + "BankF/changepass", {
+        json: {
+          name: req.session.user,
+          attempt: attempt,
+          new_pass: new_pass,
+        },
+        responseType: "json",
+      });
+    } catch (err) {
+      console.log(err);
+    }
+    console.log(patch.body);
+    if (patch.body.value == 0) {
+      req.session.errors.push({
+        msg: "Password Wrong",
+      });
+      res.redirect("/settings");
+    } else {
+      req.session.regenerate(function (err) {
+        if (patch.body.value == 1) {
+          req.session.successes = [];
+          req.session.successes.push({
+            msg: "Change Password Successful, Please Login Again",
+          });
+        }
+        res.redirect("/login");
+      });
+    }
   }
-  try {
-    patch = await got.patch("https://ccash.ryzerth.com/BankF/changepass", {
-      json: {
-        name: req.session.user,
-        attempt: attempt,
-        new_pass: new_pass,
-      },
-      responseType: "json",
-    });
-  } catch (err) {
-    console.log(err);
-  }
-  console.log(patch);
-  if (patch.body.value == true) {
-    successes.push({ msg: "Change Password Successful, Please Login Again" });
-  }
-  req.session.regenerate(function (err) {
-    res.render("login", {
-      successes: successes,
-      errors: errors,
-      marketplace: process.env.MARKETPLACE,
-      random: papy(),
-    });
-  });
 });
-function papy() {
-  const rndInt = Math.floor(Math.random() * 1337);
-  let random = false;
-  if (rndInt == 420) {
-    random = true;
-  }
-  return random;
-}
 
 module.exports = router;
