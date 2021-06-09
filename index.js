@@ -210,19 +210,8 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   logsent = logsent.body.value;
   let logrec = logsent;
   let graphlog = logsent;
-<<<<<<< HEAD
   graphlog = graphlog.reverse();
   let graphdata = "";
-=======
-  try {
-    graphlog = graphlog.reverse();
-  } catch (e) {
-    console.log(e);
-  }
-
-  console.log(graphlog);
-  let graphdata = '["transaction", "balance"]';
->>>>>>> 46b738e61c02b533989bdb6c9cae1f9d6a9bb4a6
   let currentbal = balance.value;
   if (graphlog) {
     for (i = graphlog.length - 1; i > -1; i--) {
@@ -237,15 +226,11 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   } else {
     graphlog = undefined;
   }
-<<<<<<< HEAD
   graphdata =
     ", [" + parseInt(graphlog.length) + "," + balance.value + "]" + graphdata;
   console.log(balance);
   graphdata = '["transaction", "balance"]' + graphdata;
   console.log(JSON.stringify(graphdata));
-=======
-
->>>>>>> 46b738e61c02b533989bdb6c9cae1f9d6a9bb4a6
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
   } else {
