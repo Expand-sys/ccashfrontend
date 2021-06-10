@@ -313,19 +313,18 @@ app.post("/register", async function (req, res) {
   req.session.successes = [];
   if (checkuser == false) {
     if (!name || !password || !password2) {
-      errors.push({ msg: "please fill in all fields" });
+      req.session.errors.push({ msg: "please fill in all fields" });
     }
     if (password !== password2) {
-      errors.push({ msg: "Passwords don't match" });
+      req.session.errors.push({ msg: "Passwords don't match" });
     }
     if (password.length < 6) {
-      errors.push({ msg: "Password must be at least 6 characters" });
-    }
-    if (errors) {
-      res.render("register", {
-        errors: errors,
-        marketplace: process.env.MARKETPLACE,
+      req.session.errors.push({
+        msg: "Password must be at least 6 characters",
       });
+    }
+    if (req.session.errors[0]) {
+      res.redirect("/register");
     } else {
       if (postUser(name, password)) {
         req.session.successes.push({ msg: "User Registered Please Log In" });
@@ -333,12 +332,8 @@ app.post("/register", async function (req, res) {
       }
     }
   } else {
-    errors.push({ msg: "User already exists" });
-    res.render("register", {
-      errors: errors,
-      marketplace: process.env.MARKETPLACE,
-      random: papy(),
-    });
+    req.session.errors.push({ msg: "User already exists" });
+    res.redirect("/register");
   }
 });
 
@@ -436,7 +431,13 @@ app.get("/login", function (req, res) {
 });
 
 app.get("/register", function (req, res) {
+  let successes = req.session.successes;
+  req.session.successes = [];
+  let errors = req.session.errors;
+  req.session.errors = [];
   res.render("register", {
+    errors: errors,
+    successes: successes,
     user: req.session.user,
     admin: req.session.admin,
     marketplace: process.env.MARKETPLACE,
