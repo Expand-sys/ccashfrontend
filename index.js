@@ -194,11 +194,11 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   let logsent;
   console.log("start " + Date.now());
   try {
-    logsent = await got.post(
+    logsent = await got(
       process.env.BANKAPIURL + "BankF/" + req.session.user + "/log",
       {
-        json: {
-          attempt: req.session.password,
+        headers: {
+          Password: req.session.password,
         },
         responseType: "json",
       }
@@ -206,14 +206,19 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   } catch (e) {
     console.log(e);
   }
+  console.log(logsent.body);
   console.log("query finished " + Date.now());
-  logsent = logsent.body.value;
+  logsent = logsent.body;
+  logsent = logsent.value;
   let logrec = logsent;
   let graphlog = logsent;
-  graphlog = graphlog.reverse();
+  if (graphlog != null) {
+    graphlog = graphlog.reverse();
+  }
+  console.log(graphlog);
   let graphdata = "";
   let currentbal = balance.value;
-  if (graphlog) {
+  if (graphlog != null) {
     for (i = graphlog.length - 1; i > -1; i--) {
       if (graphlog[i].from == req.session.user) {
         currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
@@ -223,14 +228,15 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
         graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
       }
     }
+    graphdata =
+      ", [" + parseInt(graphlog.length) + "," + balance.value + "]" + graphdata;
+    console.log(balance);
+    graphdata = '["transaction", "balance"]' + graphdata;
+    console.log(JSON.stringify(graphdata));
   } else {
     graphlog = undefined;
   }
-  graphdata =
-    ", [" + parseInt(graphlog.length) + "," + balance.value + "]" + graphdata;
-  console.log(balance);
-  graphdata = '["transaction", "balance"]' + graphdata;
-  console.log(JSON.stringify(graphdata));
+
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
   } else {
@@ -251,13 +257,19 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
       logsent[i].time = new Date(logsent[i].time);
     }
   }
+  if (logrec != null) {
+    logrec.reverse();
+  }
+  if (logsent != null) {
+    logsent.reverse();
+  }
   let maxgraph = balance + 1000;
   console.log("begin render " + Date.now());
   res.render("bankf", {
     maxgraph: maxgraph,
     graphdata: graphdata,
-    logrec: logrec.reverse(),
-    logsent: logsent.reverse(),
+    logrec: logrec,
+    logsent: logsent,
     user: req.session.user,
     balance: balance.value,
     user: req.session.user,
@@ -341,61 +353,55 @@ app.post("/login", async function (req, res) {
   if (req.session.user) {
     res.redirect("/");
   }
+  req.session.regenerate(function (err) {});
   let { name, password } = req.body;
   let adminTest;
-  let errors = [];
+  req.session.errors = [];
+  let verified;
   try {
-    adminTest = await got.post(process.env.BANKAPIURL + "BankF/admin/vpass", {
-      json: {
-        attempt: password,
-      },
-      responseType: "json",
-    });
-  } catch (err) {
-    console.log(err);
-  }
-  req.session.password = password;
-  if (adminTest.body.value == undefined) {
-    res.redirect("/");
-  } else {
-    req.session.admin = adminTest.body.value;
-    req.session.adminp = password;
-    let verified;
-    try {
-      verified = await got.post(process.env.BANKAPIURL + "BankF/vpass", {
-        json: {
-          name: name,
-          attempt: password,
+    verified = await got(
+      process.env.BANKAPIURL + "BankF/" + name + "/pass/verify",
+      {
+        headers: {
+          Password: password,
         },
         responseType: "json",
-      });
-    } catch (err) {
-      console.log(err);
-    } finally {
-      console.log(verified.body.value);
-      if (verified.body.value == 0) {
-        errors.push({ msg: "Password wrong" });
-        res.render("login", {
-          errors: errors,
-          marketplace: process.env.MARKETPLACE,
-          random: papy(),
+      }
+    );
+  } catch (err) {
+    console.log(err);
+  } finally {
+    if (verified.body.value == -2) {
+      req.session.errors.push({ msg: "Password wrong" });
+      res.redirect("/login");
+    } else if (verified.body.value == 1) {
+      console.log(name);
+      req.session.user = name;
+      req.session.password = password;
+      res.redirect("/BankF");
+    } else if (verified.body.value == -1) {
+      req.session.errors.push({ msg: "User not found" });
+      res.redirect("/login");
+    } else if (verified.body.value == 0) {
+      console.log(verified.body.value + " Error on verified");
+      try {
+        adminTest = await got(process.env.BANKAPIURL + "BankF/admin/verify", {
+          headers: {
+            Password: password,
+          },
+          responseType: "json",
         });
-      } else if (verified.body.value == 1) {
-        req.session.user = name;
-        req.session.password = password;
+      } catch (err) {
+        console.log(err);
+      }
+      console.log(adminTest.body);
+      if (adminTest.body) {
+        req.session.admin = adminTest.body.value;
+        req.session.adminp = password;
         res.redirect("/BankF");
-      } else {
-        errors.push({ msg: "User not found" });
-        res.render("login", {
-          errors: errors,
-          marketplace: process.env.MARKETPLACE,
-          random: papy(),
-        });
       }
     }
   }
-
-  //res.redirect('/login')
 });
 
 let admin = require("./routes/admin");

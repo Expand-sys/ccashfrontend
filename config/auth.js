@@ -3,7 +3,8 @@ module.exports = {
     if (req.session.user != undefined) {
       return next();
     }
-    req.flash("error_msg", "please login to view this resource");
+    req.session.errors = [];
+    req.session.errors.push({ msg: "please login to view this resource" });
     res.redirect("/login");
   },
 };
