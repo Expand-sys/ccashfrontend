@@ -3,7 +3,7 @@ const got = require("got");
 async function postUser(name, password) {
   console.log(process.env.BANKAPIURL);
   try {
-    const { body } = await got.get(
+    const { body } = await got.post(
       process.env.BANKAPIURL + "BankF/user/" + name,
       {
         headers: {

@@ -380,6 +380,7 @@ app.post("/login", async function (req, res) {
       req.session.password = password;
       res.redirect("/BankF");
     } else if (verified.body.value == -1) {
+      req.session.errors = [];
       req.session.errors.push({ msg: "User not found" });
       res.redirect("/login");
     } else if (verified.body.value == 0) {
