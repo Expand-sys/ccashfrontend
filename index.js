@@ -215,10 +215,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   if (graphlog != null) {
     graphlog = graphlog.reverse();
   }
-<<<<<<< HEAD
-=======
   console.log(graphlog);
->>>>>>> 0632ce5d3013197f52c2a2ffa69b5bd940da7817
   let graphdata = "";
   let currentbal = balance.value;
   if (graphlog != null) {
@@ -239,19 +236,13 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   } else {
     graphlog = undefined;
   }
-<<<<<<< HEAD
   if (graphdata != "") {
     graphdata =
       ", [" + parseInt(graphlog.length) + "," + balance.value + "]" + graphdata;
     graphdata = '["transaction", "balance"]' + graphdata;
   }
-
   console.log(balance);
-
   console.log(JSON.stringify(graphdata));
-=======
-
->>>>>>> 0632ce5d3013197f52c2a2ffa69b5bd940da7817
   if (logsent == 1 || logsent == -1 || logsent == null) {
     logsent = undefined;
   } else {
