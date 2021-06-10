@@ -268,8 +268,8 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   res.render("bankf", {
     maxgraph: maxgraph,
     graphdata: graphdata,
-    logrec: logrec.reverse(),
-    logsent: logsent.reverse(),
+    logrec: logrec,
+    logsent: logsent,
     user: req.session.user,
     balance: balance.value,
     user: req.session.user,
