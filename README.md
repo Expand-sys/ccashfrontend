@@ -1,32 +1,25 @@
 # ccashfrontend
-## shit i have to learn how to document shit but to make things interesting no backspeace
-oh okay its still going to boorin be boring as fuck its just going to be more annoying without backspaece
+This is a Front End for EntireTwix's CCcash API, it allows regular users to access the banks features and do what they like without having to know code or http requests.
 
+## Deployment
+To begin you must have set up CCash API server which you can find here [Github](https://github.com/EntireTwix/CCash) He is much better at documentation than i, but his is also harder to set up so good luck.
 
-## USeing the fuckier
-so to start using this beiutiful perice of shit you are going to need to do some things these thisgns inclugde heading over
-to twixie boyis [Github](https://github.com/EntireTwix/CCash) and setting up the api for yourself follow his documentation he it will eb easier to foollow than this mess
-thatbeing said goodluck.
+From here is will assume you have set up the api server, know its URL and what protocol it is using
 
-from heere is will assume you have set up the api server
-
-if deploying to a serverless application make sure you se t the environmental variables forst. these are as follwos
+if deploying to a serverless application make sure you set the environmental variables first. these are as follows
 * BANKAPIURL=your api url including http/s and the trailing slash NOT BANKF
 * SECURE=true if you have ssl on your front end host
-* PORT=put the port in here
-* MONGO=put your mongodb url here
-* SETUP=true when you have set the above this just gets rid of the setup page that will show if it equals false or the .env file is not fojound
+* MONGO=put your mongodb url here (not required)
+* MARKETPLACE=True if you want a market place, its not very good and not complete so i dont suggest using it. blank if not wanted
+* SETUP=true when you have set the above this just gets rid of the setup page that will show if it equals false or the .env file is not found
+* PORT=Optional will default to 3000 if not set
 
 if you are deploying on a vps then
 1. git clone repository
-1. run npm install
-1. run with your favourite node webserver if you dont know any use [pm2](https://pm2.keymetrics.io/)
-1. go through set up at localhost:<port number you set earlier>
-1. restart the application and badda bim badda boom you done
+2. run npm install
+3. run with your favourite node webserver if you dont know any use [pm2](https://pm2.keymetrics.io/)
+4. go to localhost or the ip of the server
+5. restart the application and badda bim badda boom you done
 
-## Marketplace
-
-now this is getting complex :sunglasses:
-the market place is new and requires monogodb until Jolly finishes his rust api marketplace and i can integrate that
-set up is pretty straight forward for now, it should just work:tm: as long as you import all the minecraft blocks into the database as per the item schema,
-to do this there is a bit of code at the bottom of ./routes/marketplace.js uncomment that and run that url then comment it again cause you dont want to run it twice, it will messy up your shit. i will make it a one time run route in the future.
+If you want to properly deploy it put it behind a reverse proxy too so you can have virtual hosts and all that shizzaz
+but im not going to outline that because that is more advanced, and will require a lot of explaining, google `how to reverse proxy a nodejs app` if you want to know more
