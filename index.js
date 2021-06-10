@@ -321,7 +321,7 @@ app.post("/register", async function (req, res) {
     if (password.length < 6) {
       errors.push({ msg: "Password must be at least 6 characters" });
     }
-    if (errors[0]) {
+    if (errors) {
       res.render("register", {
         errors: errors,
         marketplace: process.env.MARKETPLACE,
