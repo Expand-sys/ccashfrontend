@@ -329,12 +329,7 @@ app.post("/register", async function (req, res) {
     } else {
       if (postUser(name, password)) {
         successes.push({ msg: "User Registered Please Log In" });
-        res.render("login", {
-          errors: errors,
-          successes: successes,
-          marketplace: process.env.MARKETPLACE,
-          random: papy(),
-        });
+        res.redirect("/login");
       }
     }
   } else {
@@ -427,8 +422,12 @@ app.get("/logout", function (req, res) {
 });
 
 app.get("/login", function (req, res) {
+  let successes = req.session.successes;
+  let errors = req.session.errors;
   req.session.regenerate(function (err) {
     res.render("login", {
+      successes: successes,
+      errors: errors,
       user: req.session.user,
       marketplace: process.env.MARKETPLACE,
       random: papy(),
