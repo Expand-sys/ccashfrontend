@@ -328,7 +328,7 @@ app.post("/register", async function (req, res) {
       });
     } else {
       if (postUser(name, password)) {
-        successes.push({ msg: "User Registered Please Log In" });
+        req.session.successes.push({ msg: "User Registered Please Log In" });
         res.redirect("/login");
       }
     }
