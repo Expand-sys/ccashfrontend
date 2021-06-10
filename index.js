@@ -309,8 +309,8 @@ app.post("/register", async function (req, res) {
 
   let checkuser = await got(process.env.BANKAPIURL + "BankF/contains/" + name);
   checkuser = JSON.parse(checkuser.body).value;
-  let errors = req.session.errors;
-  let successes = req.session.successes;
+  req.session.errors = [];
+  req.session.successes = [];
   if (checkuser == false) {
     if (!name || !password || !password2) {
       errors.push({ msg: "please fill in all fields" });
