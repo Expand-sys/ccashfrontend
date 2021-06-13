@@ -4,7 +4,9 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const got = require("got");
+const { CCashClient } = require("ccash-client-js");
+
+const client = new CCashClient(process.env.BANKAPIURL);
 const { ensureAuthenticated } = require("../config/auth.js");
 let db;
 
@@ -59,31 +61,31 @@ router.get("/", function (req, res) {
 });
 
 router.get("/marketdash", ensureAuthenticated, function (req, res) {
-  Inventory.findOne({ user: req.session.user }, async function (
-    err,
-    inventory
-  ) {
-    if (!inventory) {
-      let newinv = new Inventory();
-      newinv.user = req.session.user;
-      newinv.save(function (err) {
-        if (err) {
-          console.log(err);
-          return;
-        } else {
-          console.log("created new inventory for " + req.session.user);
-        }
+  Inventory.findOne(
+    { user: req.session.user },
+    async function (err, inventory) {
+      if (!inventory) {
+        let newinv = new Inventory();
+        newinv.user = req.session.user;
+        newinv.save(function (err) {
+          if (err) {
+            console.log(err);
+            return;
+          } else {
+            console.log("created new inventory for " + req.session.user);
+          }
+        });
+      }
+
+      res.render("marketdash", {
+        user: req.session.user,
+        admin: req.session.admin,
+        inventory: inventory,
+        marketplace: process.env.MARKETPLACE,
+        random: papy(),
       });
     }
-
-    res.render("marketdash", {
-      user: req.session.user,
-      admin: req.session.admin,
-      inventory: inventory,
-      marketplace: process.env.MARKETPLACE,
-      random: papy(),
-    });
-  });
+  );
 });
 
 router.get("/:id", function (req, res) {
@@ -199,15 +201,12 @@ router.post("/:id/buy", async function (req, res) {
       });
     }
     Listing.findOneAndRemove({ _id: req.params.id }).exec();
-    transfer = got.post(process.env.BANKAPIURL + "BankF/sendfunds", {
-      json: {
-        a_name: req.session.user,
-        b_name: listing.seller,
-        amount: parseInt(listing.amount * listing.price),
-        attempt: req.session.password,
-      },
-      responseType: "json",
-    });
+    transfer = client.sendFunds(
+      req.session.user,
+      req.session.password,
+      listing.seller,
+      parseInt(listing.amount * listing.price)
+    );
     res.redirect("/marketplace/marketdash");
   });
 });

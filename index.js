@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 const https = require("https");
-const got = require("got");
+const { CCashClient } = require("ccash-client-js");
 const bodyParser = require("body-parser");
 const expressValidator = require("express-validator");
 const flash = require("connect-flash");
@@ -16,6 +16,8 @@ const fs = require("fs");
 let Log = require("./schemas/log.js");
 const mongoose = require("mongoose");
 dotenv.config();
+
+const client = new CCashClient(process.env.BANKAPIURL);
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
@@ -147,13 +149,13 @@ app.get("/", async function (req, res) {
   } else {
     let checkalive;
     try {
-      checkalive = await got(process.env.BANKAPIURL + "BankF/help");
+      checkalive = await client.help();
     } catch (err) {
       console.log(err);
     }
     let alive = false;
     try {
-      if (checkalive.body) {
+      if (checkalive) {
         alive = true;
       }
     } catch (err) {
@@ -184,30 +186,19 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   }
   let balance = 0;
   try {
-    balance = await got(
-      process.env.BANKAPIURL + "BankF/" + req.session.user + "/bal"
-    );
-    balance = JSON.parse(balance.body);
+    balance = await client.balance(req.session.user);
   } catch (err) {
     console.log(err);
   }
   let logsent;
   console.log("start " + Date.now());
   try {
-    logsent = await got.post(
-      process.env.BANKAPIURL + "BankF/" + req.session.user + "/log",
-      {
-        json: {
-          attempt: req.session.password,
-        },
-        responseType: "json",
-      }
-    );
+    const { user, password } = req.session;
+    logsent = await client.log(user, password);
   } catch (e) {
     console.log(e);
   }
   console.log("query finished " + Date.now());
-  logsent = logsent.body.value;
   let logrec = logsent;
   let graphlog = logsent;
   if (graphlog != null) {
@@ -284,10 +275,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
 app.post("/sendfunds", async function (req, res) {
   let balance = 0;
   try {
-    balance = await got(
-      process.env.BANKAPIURL + "BankF/" + req.session.user + "/bal"
-    );
-    balance = JSON.parse(balance.body);
+    balance = await client.balance(req.session.user);
   } catch (err) {
     console.log(err);
   }
@@ -296,17 +284,9 @@ app.post("/sendfunds", async function (req, res) {
   let successes = [];
   req.session.errors = [];
   let result = {};
-  result = await got.post(process.env.BANKAPIURL + "BankF/sendfunds", {
-    json: {
-      a_name: a_name,
-      b_name: name,
-      amount: parseInt(amount),
-      attempt: senderpass,
-    },
-    responseType: "json",
-  });
+  result = await client.sendFunds(a_name, senderpass, name, parseInt(amount));
 
-  if (result.body.value == true || result.body.value) {
+  if (result) {
     req.session.success = true;
     //post details
     res.redirect("/BankF");
@@ -319,8 +299,7 @@ app.post("/sendfunds", async function (req, res) {
 app.post("/register", async function (req, res) {
   var { name, password, password2 } = req.body;
 
-  let checkuser = await got(process.env.BANKAPIURL + "BankF/contains/" + name);
-  checkuser = JSON.parse(checkuser.body).value;
+  let checkuser = await client.contains(name);
   req.session.errors = [];
   req.session.successes = [];
   if (checkuser == false) {
@@ -357,42 +336,30 @@ app.post("/login", async function (req, res) {
   let adminTest;
   let errors = [];
   try {
-    adminTest = await got.post(process.env.BANKAPIURL + "BankF/admin/vpass", {
-      json: {
-        attempt: password,
-      },
-      responseType: "json",
-    });
+    adminTest = await client.adminVerifyPass(password);
   } catch (err) {
     console.log(err);
   }
   req.session.password = password;
-  if (adminTest.body.value == undefined) {
+  if (!adminTest) {
     res.redirect("/");
   } else {
-    req.session.admin = adminTest.body.value;
+    req.session.admin = name;
     req.session.adminp = password;
     let verified;
     try {
-      verified = await got.post(process.env.BANKAPIURL + "BankF/vpass", {
-        json: {
-          name: name,
-          attempt: password,
-        },
-        responseType: "json",
-      });
+      verified = await client.verifyPassword(name, password);
     } catch (err) {
       console.log(err);
     } finally {
-      console.log(verified.body.value);
-      if (verified.body.value == 0) {
+      if (!verified) {
         errors.push({ msg: "Password wrong" });
         res.render("login", {
           errors: errors,
           marketplace: process.env.MARKETPLACE,
           random: papy(),
         });
-      } else if (verified.body.value == 1) {
+      } else if (verified) {
         req.session.user = name;
         req.session.password = password;
         res.redirect("/BankF");

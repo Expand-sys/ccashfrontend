@@ -8,10 +8,13 @@ const flash = require("connect-flash");
 const expressValidator = require("express-validator");
 const session = require("express-session");
 const { postUser } = require("../helpers/functions.js");
-const got = require("got");
 const MemoryStore = require("memorystore")(session);
 const fs = require("fs");
 const mongoose = require("mongoose");
+const { CCashClient } = require("ccash-client-js");
+
+const client = new CCashClient(process.env.BANKAPIURL);
+
 console.log("Sen was here");
 
 function mongo() {
@@ -46,8 +49,7 @@ router.get("/", checkAdmin, function (req, res) {
 
 router.post("/user", checkAdmin, async function (req, res) {
   let { name, init_pass, init_bal, password2 } = req.body;
-  let contains = await got(process.env.BANKAPIURL + "BankF/contains/" + name);
-  contains = JSON.parse(contains.body).value;
+  let contains = await client.contains(name);
   let errors = [];
   let successes = [];
   if (contains == true) {
@@ -71,19 +73,16 @@ router.post("/user", checkAdmin, async function (req, res) {
     let post;
     let successes = [];
     try {
-      post = await got.post(process.env.BANKAPIURL + "BankF/admin/user", {
-        json: {
-          name: name,
-          attempt: req.session.adminp,
-          init_bal: parseInt(init_bal),
-          init_pass: init_pass,
-        },
-        responseType: "json",
-      });
+      post = await client.adminAddUser(
+        name,
+        req.session.adminp,
+        init_pass,
+        parseInt(init_bal)
+      );
     } catch (err) {
       console.log(err);
     }
-    if (post.body.value == true) {
+    if (post) {
       successes.push({ msg: "Account Creation Successful" });
     }
   }
@@ -102,8 +101,7 @@ router.post("/baluser", checkAdmin, async function (req, res) {
   let successes = [];
   let errors = [];
   try {
-    balance = await got(process.env.BANKAPIURL + "BankF/" + name + "/bal");
-    balance = JSON.parse(balance.body);
+    balance = await client.balance(name);
   } catch (err) {
     console.log(err);
   }
@@ -129,21 +127,11 @@ router.post("/bal", checkAdmin, async function (req, res) {
   let patch;
   let successes = [];
   try {
-    patch = await got.patch(
-      process.env.BANKAPIURL + "BankF/admin/" + name + "/bal",
-      {
-        json: {
-          name: name,
-          attempt: req.session.adminp,
-          amount: parseInt(amount),
-        },
-        responseType: "json",
-      }
-    );
+    patch = await client.setBal(name, req.session.adminp, parseInt(amount));
   } catch (err) {
     console.log(err);
   }
-  if ((await patch.body.value) == true) {
+  if (patch) {
     successes.push({ msg: "Change Funds Successful" });
   }
   res.render("adminsettings", {
@@ -157,8 +145,7 @@ router.post("/bal", checkAdmin, async function (req, res) {
 router.post("/userdelete", checkAdmin, async function (req, res) {
   let { name, attempt } = req.body;
   console.log(name);
-  let contains = await got(process.env.BANKAPIURL + "BankF/contains/" + name);
-  contains = JSON.parse(contains.body).value;
+  let contains = await client.contains(name);
   let deleteUser;
   let successes = [];
   let errors = [];
@@ -167,13 +154,7 @@ router.post("/userdelete", checkAdmin, async function (req, res) {
   }
   console.log(contains);
   if (contains == true) {
-    deleteUser = got.delete(process.env.BANKAPIURL + "BankF/admin/user", {
-      json: {
-        name: name,
-        attempt: attempt,
-      },
-      responseType: "json",
-    });
+    deleteUser = client.adminDeleteUser(name, attempt);
     successes.push({ msg: "User Deletion Successful" });
   } else {
     errors.push({ msg: "User Deletion Failed, User Not Found" });
@@ -192,16 +173,10 @@ router.post("/destroyallsessions", checkAdmin, async function (req, res) {
   let adminTest;
   let errors = [];
   try {
-    adminTest = await got.post(process.env.BANKAPIURL + "BankF/admin/vpass", {
-      json: {
-        attempt: attempt,
-      },
-      responseType: "json",
-    });
+    adminTest = await client.adminVerifyPass(attempt);
   } catch (err) {
     console.log(err);
   }
-  console.log(adminTest.body.value);
   if (adminTest) {
     req.sessionStore.clear(function (err) {
       console.log(err);
@@ -279,12 +254,7 @@ router.post("/mongodb", checkAdmin, async function (req, res) {
 router.post("/close", checkAdmin, async function (req, res) {
   let { attempt } = req.body;
   let close;
-  close = got.post(process.env.BANKAPIURL + "BankF/admin/close", {
-    json: {
-      attempt: attempt,
-    },
-    responseType: "json",
-  });
+  close = client.close();
   res.redirect("../");
 });
 function papy() {

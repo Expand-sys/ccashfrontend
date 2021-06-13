@@ -8,7 +8,9 @@ const flash = require("connect-flash");
 const expressValidator = require("express-validator");
 const session = require("express-session");
 const { postUser } = require("../helpers/functions.js");
-const got = require("got");
+const { CCashClient } = require("ccash-client-js");
+
+const client = new CCashClient(process.env.BANKAPIURL);
 
 router.get("/", ensureAuthenticated, function (req, res) {
   let successes = req.session.successes;
@@ -44,26 +46,18 @@ router.post("/pass", ensureAuthenticated, async function (req, res) {
     res.redirect("/settings");
   } else {
     try {
-      patch = await got.patch(process.env.BANKAPIURL + "BankF/changepass", {
-        json: {
-          name: req.session.user,
-          attempt: attempt,
-          new_pass: new_pass,
-        },
-        responseType: "json",
-      });
+      patch = await client.changePassword(req.session.user, attempt, new_pass);
     } catch (err) {
       console.log(err);
     }
-    console.log(patch.body);
-    if (patch.body.value == 0) {
+    if (patch) {
       req.session.errors.push({
         msg: "Password Wrong",
       });
       res.redirect("/settings");
     } else {
       req.session.regenerate(function (err) {
-        if (patch.body.value == 1) {
+        if (patch) {
           req.session.successes = [];
           req.session.successes.push({
             msg: "Change Password Successful, Please Login Again",
