@@ -12,6 +12,9 @@ const got = require("got");
 const MemoryStore = require("memorystore")(session);
 const fs = require("fs");
 const mongoose = require("mongoose");
+const { CCashClient } = require("ccash-client-js");
+
+const client = new CCashClient(process.env.BANKAPIURL);
 console.log("Sen was here");
 
 function mongo() {
@@ -36,9 +39,14 @@ function mongo() {
 }
 
 router.get("/", checkAdmin, function (req, res) {
+  let successes = req.session.successes;
+  let errors = req.session.errors;
+
   res.render("adminsettings", {
     user: req.session.user,
     admin: req.session.admin,
+    errors: errors,
+    successes: successes,
     marketplace: process.env.MARKETPLACE,
     random: papy(),
   });
@@ -46,10 +54,9 @@ router.get("/", checkAdmin, function (req, res) {
 
 router.post("/user", checkAdmin, async function (req, res) {
   let { name, init_pass, init_bal, password2 } = req.body;
-  let contains = await got(process.env.BANKAPIURL + "BankF/contains/" + name);
-  contains = JSON.parse(contains.body).value;
-  let errors = [];
-  let successes = [];
+  let contains = await client.contains(name);
+  req.session.errors = [];
+  req.session.successes = [];
   if (contains == true) {
     errors.push({ msg: "User already exists" });
     res.render("adminsettings", {
@@ -57,165 +64,111 @@ router.post("/user", checkAdmin, async function (req, res) {
     });
   } else {
     if (!name || !init_pass || !init_bal || !password2) {
-      errors.push({ msg: "please fill in all fields" });
+      req.session.errors.push({ msg: "please fill in all fields" });
     }
     //check if match
     if (init_pass !== password2) {
-      errors.push({ msg: "Passwords don't match" });
+      req.session.errors.push({ msg: "Passwords don't match" });
     }
 
     //check if password is more than 6 characters
     if (init_pass.length < 6) {
-      errors.push({ msg: "Password must be at least 6 characters" });
+      req.session.errors.push({
+        msg: "Password must be at least 6 characters",
+      });
     }
     let post;
     let successes = [];
     try {
-      post = await got.post(process.env.BANKAPIURL + "BankF/admin/user", {
-        json: {
-          name: name,
-          attempt: req.session.adminp,
-          init_bal: parseInt(init_bal),
-          init_pass: init_pass,
-        },
-        responseType: "json",
-      });
+      post = await client.adminAddUser(
+        name,
+        req.session.adminp,
+        init_pass,
+        parseInt(init_bal)
+      );
     } catch (err) {
       console.log(err);
     }
-    if (post.body.value == true) {
+    if (post) {
       successes.push({ msg: "Account Creation Successful" });
     }
   }
-  res.render("adminsettings", {
-    user: req.session.user,
-    admin: req.session.admin,
-    successes: successes,
-    marketplace: process.env.MARKETPLACE,
-    random: papy(),
-  });
+  res.redirect("/admin");
 });
 
 router.post("/baluser", checkAdmin, async function (req, res) {
   let { name } = req.body;
   let balance;
-  let successes = [];
-  let errors = [];
+  req.session.successes = [];
+  req.session.errors = [];
   try {
-    balance = await got(process.env.BANKAPIURL + "BankF/" + name + "/bal");
-    balance = JSON.parse(balance.body);
+    balance = await client.balance(name);
   } catch (err) {
     console.log(err);
   }
-  if (balance.value == -1 || balance.value == undefined) {
-    errors.push({ msg: "User not found" });
+  balance = parseInt(balance);
+  console.log(balance);
+  if (balance < 0) {
+    req.session.errors.push({ msg: "User not found" });
   } else {
-    successes.push({
+    req.session.successes.push({
       msg: "User: " + name + " has " + balance.value + " monies",
     });
   }
-  res.render("adminsettings", {
-    user: req.session.user,
-    admin: req.session.admin,
-    successes: successes,
-    errors: errors,
-    marketplace: process.env.MARKETPLACE,
-    random: papy(),
-  });
+  res.redirect("/admin");
 });
 
 router.post("/bal", checkAdmin, async function (req, res) {
   let { name, amount } = req.body;
   let patch;
-  let successes = [];
+  req.session.successes = [];
+  req.session.errors = [];
   try {
-    patch = await got.patch(
-      process.env.BANKAPIURL + "BankF/admin/" + name + "/bal",
-      {
-        json: {
-          name: name,
-          attempt: req.session.adminp,
-          amount: parseInt(amount),
-        },
-        responseType: "json",
-      }
-    );
+    patch = await client.setBalance(name, req.session.adminp, parseInt(amount));
   } catch (err) {
     console.log(err);
   }
-  if ((await patch.body.value) == true) {
-    successes.push({ msg: "Change Funds Successful" });
+  if (patch) {
+    req.session.successes.push({ msg: "Change Funds Successful" });
   }
-  res.render("adminsettings", {
-    user: req.session.user,
-    admin: req.session.admin,
-    successes: successes,
-    marketplace: process.env.MARKETPLACE,
-    random: papy(),
-  });
+  res.redirect("/admin");
 });
 router.post("/userdelete", checkAdmin, async function (req, res) {
   let { name, attempt } = req.body;
   console.log(name);
-  let contains = await got(process.env.BANKAPIURL + "BankF/contains/" + name);
-  contains = JSON.parse(contains.body).value;
+  let contains = await client.contains(name);
   let deleteUser;
   let successes = [];
   let errors = [];
   if (attempt != req.session.adminp) {
-    errors.push({ msg: "Wrong Admin Password" });
+    req.session.errors.push({ msg: "Wrong Admin Password" });
   }
   console.log(contains);
   if (contains == true) {
-    deleteUser = got.delete(process.env.BANKAPIURL + "BankF/admin/user", {
-      json: {
-        name: name,
-        attempt: attempt,
-      },
-      responseType: "json",
-    });
-    successes.push({ msg: "User Deletion Successful" });
+    deleteUser = client.adminDeleteUser(name, attempt);
+    req.session.successes.push({ msg: "User Deletion Successful" });
   } else {
-    errors.push({ msg: "User Deletion Failed, User Not Found" });
+    req.session.errors.push({ msg: "User Deletion Failed, User Not Found" });
   }
-  res.render("adminsettings", {
-    user: req.session.user,
-    admin: req.session.admin,
-    successes: successes,
-    errors: errors,
-    marketplace: process.env.MARKETPLACE,
-    random: papy(),
-  });
+  res.redirect("/admin");
 });
 router.post("/destroyallsessions", checkAdmin, async function (req, res) {
   let { attempt } = req.body;
   let adminTest;
-  let errors = [];
+  req.session.errors = [];
   try {
-    adminTest = await got.post(process.env.BANKAPIURL + "BankF/admin/vpass", {
-      json: {
-        attempt: attempt,
-      },
-      responseType: "json",
-    });
+    adminTest = await client.adminVerifyPass(attempt);
   } catch (err) {
     console.log(err);
   }
-  console.log(adminTest.body.value);
   if (adminTest) {
     req.sessionStore.clear(function (err) {
       console.log(err);
     });
     res.redirect("/");
   } else {
-    errors.push({ msg: "failed admin password check" });
-    res.render("adminsettings", {
-      user: req.session.user,
-      admin: req.session.admin,
-      errors: errors,
-      marketplace: process.env.MARKETPLACE,
-      random: papy(),
-    });
+    req.session.errors.push({ msg: "failed admin password check" });
+    res.redirect("/admin");
   }
 });
 
@@ -279,12 +232,7 @@ router.post("/mongodb", checkAdmin, async function (req, res) {
 router.post("/close", checkAdmin, async function (req, res) {
   let { attempt } = req.body;
   let close;
-  close = got.post(process.env.BANKAPIURL + "BankF/admin/close", {
-    json: {
-      attempt: attempt,
-    },
-    responseType: "json",
-  });
+  close = client.close();
   res.redirect("../");
 });
 function papy() {

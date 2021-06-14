@@ -1,18 +1,11 @@
-const got = require("got");
+const { CCashClient } = require("ccash-client-js");
+
+const client = new CCashClient(process.env.BANKAPIURL);
 
 async function postUser(name, password) {
   console.log(process.env.BANKAPIURL);
   try {
-    const { body } = await got.post(
-      process.env.BANKAPIURL + "BankF/user/" + name,
-      {
-        headers: {
-          Password: password,
-        },
-        responseType: "json",
-      }
-    );
-    return body;
+    return await client.addUser(name, password);
   } catch (err) {
     console.log(err);
   }

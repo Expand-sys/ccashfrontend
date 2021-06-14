@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const expressValidator = require("express-validator");
 const flash = require("connect-flash");
 const session = require("express-session");
-const { postUser } = require("./helpers/functions.js");
+
 const { ensureAuthenticated } = require("./config/auth.js");
 const app = express();
 const MemoryStore = require("memorystore")(session);
@@ -15,8 +15,10 @@ const dotenv = require("dotenv");
 const fs = require("fs");
 let Log = require("./schemas/log.js");
 const mongoose = require("mongoose");
+const { CCashClient } = require("ccash-client-js");
 dotenv.config();
-
+const { postUser } = require("./helpers/functions.js");
+const client = new CCashClient(process.env.BANKAPIURL);
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 app.use(flash());
@@ -147,13 +149,13 @@ app.get("/", async function (req, res) {
   } else {
     let checkalive;
     try {
-      checkalive = await got(process.env.BANKAPIURL + "BankF/help");
+      checkalive = await client.help();
     } catch (err) {
       console.log(err);
     }
     let alive = false;
     try {
-      if (checkalive.body) {
+      if (checkalive) {
         alive = true;
       }
     } catch (err) {
@@ -184,71 +186,56 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   }
   let balance = 0;
   try {
-    balance = await got(
-      process.env.BANKAPIURL + "BankF/" + req.session.user + "/bal"
-    );
-    balance = JSON.parse(balance.body);
+    balance = await client.balance(req.session.user);
   } catch (err) {
     console.log(err);
   }
   let logsent;
   console.log("start " + Date.now());
   try {
-    logsent = await got(
-      process.env.BANKAPIURL + "BankF/" + req.session.user + "/log",
-      {
-        headers: {
-          Password: req.session.password,
-        },
-        responseType: "json",
-      }
-    );
+    const { user, password } = req.session;
+    logsent = await client.log(user, password);
   } catch (e) {
     console.log(e);
   }
-  console.log(logsent.body);
+  console.log(logsent);
   console.log("query finished " + Date.now());
-  logsent = logsent.body;
-  logsent = logsent.value;
   let logrec = logsent;
   let graphlog = logsent;
-  if (graphlog != null) {
+  console.log(graphlog);
+  if (graphlog != 0 && graphlog != null) {
     graphlog = graphlog.reverse();
   }
-  console.log(graphlog);
   let graphdata = "";
-  let currentbal = balance.value;
-  if (graphlog != null) {
-    for (i = graphlog.length - 1; i > -1; i--) {
+  let currentbal = balance;
+  if (graphlog != 0 && graphlog != null) {
+    graphdata =
+      graphdata + ", [" + parseInt(graphlog.length) + "," + balance + "]";
+    for (i = 0; i < graphlog.length; i++) {
       if (graphlog[i].from == req.session.user) {
-        currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
+        currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
         graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
       } else {
-        currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
+        currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
         graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
       }
     }
-    graphdata =
-      ", [" + parseInt(graphlog.length) + "," + balance.value + "]" + graphdata;
     console.log(balance);
-    graphdata = '["transaction", "balance"]' + graphdata;
     console.log(JSON.stringify(graphdata));
   } else {
     graphlog = undefined;
   }
   if (graphdata != "") {
-    graphdata =
-      ", [" + parseInt(graphlog.length) + "," + balance.value + "]" + graphdata;
     graphdata = '["transaction", "balance"]' + graphdata;
   }
   console.log(balance);
   console.log(JSON.stringify(graphdata));
-  if (logsent == 1 || logsent == -1 || logsent == null) {
+  if (logsent == null) {
     logsent = undefined;
   } else {
     logsent = await logsent.filter(({ from }) => from === req.session.user);
   }
-  if (logrec === 1 || logrec === -1 || logrec === null) {
+  if (logrec == null) {
     logrec = undefined;
   } else {
     logrec = await logrec.filter(({ to }) => to === req.session.user);
@@ -277,7 +264,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     logrec: logrec,
     logsent: logsent,
     user: req.session.user,
-    balance: balance.value,
+    balance: balance,
     user: req.session.user,
     admin: req.session.admin,
     sucesses: successes,
@@ -290,10 +277,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
 app.post("/sendfunds", async function (req, res) {
   let balance = 0;
   try {
-    balance = await got(
-      process.env.BANKAPIURL + "BankF/" + req.session.user + "/bal"
-    );
-    balance = JSON.parse(balance.body);
+    balance = await client.balance(req.session.user);
   } catch (err) {
     console.log(err);
   }
@@ -302,17 +286,9 @@ app.post("/sendfunds", async function (req, res) {
   let successes = [];
   req.session.errors = [];
   let result = {};
-  result = await got.post(process.env.BANKAPIURL + "BankF/sendfunds", {
-    json: {
-      a_name: a_name,
-      b_name: name,
-      amount: parseInt(amount),
-      attempt: senderpass,
-    },
-    responseType: "json",
-  });
+  result = await client.sendFunds(a_name, senderpass, name, parseInt(amount));
 
-  if (result.body.value == true || result.body.value) {
+  if (result == true || result) {
     req.session.success = true;
     //post details
     res.redirect("/BankF");
@@ -324,12 +300,16 @@ app.post("/sendfunds", async function (req, res) {
 
 app.post("/register", async function (req, res) {
   var { name, password, password2 } = req.body;
+  let checkuser;
+  try {
+    checkuser = await client.contains(name);
+  } catch (e) {
+    console.log(e);
+  }
 
-  let checkuser = await got(process.env.BANKAPIURL + "BankF/contains/" + name);
-  checkuser = JSON.parse(checkuser.body).value;
   req.session.errors = [];
   req.session.successes = [];
-  if (checkuser == false) {
+  if (!checkuser) {
     if (!name || !password || !password2) {
       req.session.errors.push({ msg: "please fill in all fields" });
     }
@@ -360,51 +340,33 @@ app.post("/login", async function (req, res) {
     res.redirect("/");
   }
   req.session.regenerate(function (err) {});
-  let { name, password } = req.body;
+  const { name, password } = req.body;
   let adminTest;
-  req.session.errors = [];
-  let verified;
   try {
-    verified = await got(
-      process.env.BANKAPIURL + "BankF/" + name + "/pass/verify",
-      {
-        headers: {
-          Password: password,
-        },
-        responseType: "json",
-      }
-    );
+    adminTest = await client.adminVerifyPass(password);
   } catch (err) {
     console.log(err);
-  } finally {
-    if (verified.body.value == -2) {
-      req.session.errors.push({ msg: "Password wrong" });
-      res.redirect("/login");
-    } else if (verified.body.value == 1) {
-      console.log(name);
-      req.session.user = name;
-      req.session.password = password;
-      res.redirect("/BankF");
-    } else if (verified.body.value == -1) {
-      req.session.errors = [];
-      req.session.errors.push({ msg: "User not found" });
-      res.redirect("/login");
-    } else if (verified.body.value == 0) {
-      console.log(verified.body.value + " Error on verified");
-      try {
-        adminTest = await got(process.env.BANKAPIURL + "BankF/admin/verify", {
-          headers: {
-            Password: password,
-          },
-          responseType: "json",
-        });
-      } catch (err) {
-        console.log(err);
-      }
-      console.log(adminTest.body);
-      if (adminTest.body) {
-        req.session.admin = adminTest.body.value;
-        req.session.adminp = password;
+  }
+  if (adminTest) {
+    req.session.admin = adminTest;
+    req.session.adminp = password;
+    req.session.user = name;
+    req.session.password = password;
+    res.redirect("/BankF");
+  } else {
+    let verified;
+    try {
+      verified = await client.verifyPassword(name, password);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      if (!verified) {
+        req.session.errors = [];
+        req.session.errors.push({ msg: "Password wrong" });
+        res.redirect("/login");
+      } else {
+        req.session.user = name;
+        req.session.password = password;
         res.redirect("/BankF");
       }
     }
