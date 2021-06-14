@@ -6,7 +6,6 @@ const bodyParser = require("body-parser");
 const expressValidator = require("express-validator");
 const flash = require("connect-flash");
 const session = require("express-session");
-
 const { ensureAuthenticated } = require("./config/auth.js");
 const app = express();
 const MemoryStore = require("memorystore")(session);
@@ -19,6 +18,7 @@ const { CCashClient } = require("ccash-client-js");
 dotenv.config();
 const { postUser } = require("./helpers/functions.js");
 const client = new CCashClient(process.env.BANKAPIURL);
+
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 app.use(flash());
@@ -190,6 +190,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   } catch (err) {
     console.log(err);
   }
+  console.log(balance);
   let logsent;
   console.log("start " + Date.now());
   try {
@@ -198,36 +199,32 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   } catch (e) {
     console.log(e);
   }
-  console.log(logsent);
-  console.log("query finished " + Date.now());
   let logrec = logsent;
   let graphlog = logsent;
-  console.log(graphlog);
-  if (graphlog != 0 && graphlog != null) {
+  if (graphlog != null) {
     graphlog = graphlog.reverse();
   }
   let graphdata = "";
   let currentbal = balance;
-  if (graphlog != 0 && graphlog != null) {
-    graphdata =
-      graphdata + ", [" + parseInt(graphlog.length) + "," + balance + "]";
-    for (i = 0; i < graphlog.length; i++) {
+  if (graphlog) {
+    for (i = graphlog.length - 1; i > -1; i--) {
       if (graphlog[i].from == req.session.user) {
-        currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
+        currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
         graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
       } else {
-        currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
+        currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
         graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
       }
     }
-    console.log(balance);
-    console.log(JSON.stringify(graphdata));
   } else {
     graphlog = undefined;
   }
   if (graphdata != "") {
+    graphdata =
+      ", [" + parseInt(graphlog.length) + "," + balance + "]" + graphdata;
     graphdata = '["transaction", "balance"]' + graphdata;
   }
+
   console.log(balance);
   console.log(JSON.stringify(graphdata));
   if (logsent == null) {
