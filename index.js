@@ -172,10 +172,7 @@ app.get("/", async function (req, res) {
   }
 });
 app.get("/BankF", ensureAuthenticated, async function (req, res) {
-  let successes = [];
-  if (req.session.sucess == true) {
-    successes.push({ msg: "Transfer successful" });
-  }
+  let successes = req.session.successes;
   let errors = req.session.errors;
   req.session.errors = [];
   let admin;
@@ -190,7 +187,6 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   } catch (err) {
     console.log(err);
   }
-  console.log(balance);
   let logsent;
   console.log("start " + Date.now());
   try {
@@ -224,9 +220,6 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
       ", [" + parseInt(graphlog.length) + "," + balance + "]" + graphdata;
     graphdata = '["transaction", "balance"]' + graphdata;
   }
-
-  console.log(balance);
-  console.log(JSON.stringify(graphdata));
   if (logsent == null) {
     logsent = undefined;
   } else {
@@ -272,21 +265,27 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
 });
 
 app.post("/sendfunds", async function (req, res) {
-  let balance = 0;
-  try {
-    balance = await client.balance(req.session.user);
-  } catch (err) {
-    console.log(err);
-  }
   let { amount, name, senderpass } = req.body;
-  let a_name = req.session.user;
-  let successes = [];
   req.session.errors = [];
-  let result = {};
-  result = await client.sendFunds(a_name, senderpass, name, parseInt(amount));
-
+  req.session.successes = [];
+  let a_name = req.session.user;
+  let result;
+  try {
+    result = await got.post(
+      `${process.env.BANKAPIURL}/${a_name}/send/${name}?amount=${amount}`,
+      {
+        headers: {
+          Password: senderpass,
+        },
+      }
+    );
+    //client.sendFunds(a_name, senderpass, name, amount);
+  } catch (e) {
+    console.log(e);
+  }
+  console.log(result);
   if (result == true || result) {
-    req.session.success = true;
+    req.session.successes.push({ msg: "Transfer successful" });
     //post details
     res.redirect("/BankF");
   } else {

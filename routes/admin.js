@@ -40,8 +40,9 @@ function mongo() {
 
 router.get("/", checkAdmin, function (req, res) {
   let successes = req.session.successes;
+  req.session.successes = [];
   let errors = req.session.errors;
-
+  req.session.errors = [];
   res.render("adminsettings", {
     user: req.session.user,
     admin: req.session.admin,
@@ -54,7 +55,12 @@ router.get("/", checkAdmin, function (req, res) {
 
 router.post("/user", checkAdmin, async function (req, res) {
   let { name, init_pass, init_bal, password2 } = req.body;
-  let contains = await client.contains(name);
+  let contains;
+  try {
+    contains = await client.contains(name);
+  } catch (e) {
+    console.log(e);
+  }
   req.session.errors = [];
   req.session.successes = [];
   if (contains == true) {
@@ -90,7 +96,7 @@ router.post("/user", checkAdmin, async function (req, res) {
       console.log(err);
     }
     if (post) {
-      successes.push({ msg: "Account Creation Successful" });
+      req.session.successes.push({ msg: "Account Creation Successful" });
     }
   }
   res.redirect("/admin");
@@ -107,12 +113,11 @@ router.post("/baluser", checkAdmin, async function (req, res) {
     console.log(err);
   }
   balance = parseInt(balance);
-  console.log(balance);
   if (balance < 0) {
     req.session.errors.push({ msg: "User not found" });
   } else {
     req.session.successes.push({
-      msg: "User: " + name + " has " + balance.value + " monies",
+      msg: "User: " + name + " has " + balance + " monies",
     });
   }
   res.redirect("/admin");
@@ -136,22 +141,28 @@ router.post("/bal", checkAdmin, async function (req, res) {
 router.post("/userdelete", checkAdmin, async function (req, res) {
   let { name, attempt } = req.body;
   console.log(name);
-  let contains = await client.contains(name);
-  let deleteUser;
-  let successes = [];
-  let errors = [];
+  let contains;
+  try {
+    contains = await client.contains(name);
+  } catch (e) {
+    console.log(e);
+  }
   if (attempt != req.session.adminp) {
     req.session.errors.push({ msg: "Wrong Admin Password" });
-  }
-  console.log(contains);
-  if (contains == true) {
-    deleteUser = client.adminDeleteUser(name, attempt);
-    req.session.successes.push({ msg: "User Deletion Successful" });
+    res.redirect("/admin");
   } else {
-    req.session.errors.push({ msg: "User Deletion Failed, User Not Found" });
+    console.log(contains);
+    if (contains == 1) {
+      let deleteUser = client.adminDeleteUser(name, attempt);
+      req.session.successes.push({ msg: "User Deletion Successful" });
+      res.redirect("/admin");
+    } else {
+      req.session.errors.push({ msg: "User Deletion Failed, User Not Found" });
+      res.redirect("/admin");
+    }
   }
-  res.redirect("/admin");
 });
+
 router.post("/destroyallsessions", checkAdmin, async function (req, res) {
   let { attempt } = req.body;
   let adminTest;
@@ -164,8 +175,8 @@ router.post("/destroyallsessions", checkAdmin, async function (req, res) {
   if (adminTest) {
     req.sessionStore.clear(function (err) {
       console.log(err);
+      res.redirect("/");
     });
-    res.redirect("/");
   } else {
     req.session.errors.push({ msg: "failed admin password check" });
     res.redirect("/admin");
