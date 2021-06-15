@@ -212,15 +212,7 @@ app.post("/sendfunds", async function (req, res) {
   let a_name = req.session.user;
   let result;
   try {
-    result = await got.post(
-      `${process.env.BANKAPIURL}/${a_name}/send/${name}?amount=${amount}`,
-      {
-        headers: {
-          Password: senderpass,
-        },
-      }
-    );
-    //client.sendFunds(a_name, senderpass, name, amount);
+    result = await client.sendFunds(a_name, senderpass, name, amount);
   } catch (e) {
     console.log(e);
   }
