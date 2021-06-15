@@ -204,6 +204,8 @@ router.post("/changebackend", checkAdmin, async function (req, res) {
       process.env.MONGO +
       "\nSETUP=true"
   );
+  fs.mkdirSync("tmp");
+  fs.writeFileSync("tmp/restart.txt", "");
   res.redirect("../");
 });
 
