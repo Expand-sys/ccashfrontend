@@ -80,59 +80,6 @@ app.use(
     },
   })
 );
-app.post("/setup", async function (req, res) {
-  console.log(req.body);
-  let { mongo, url, banksecure, marketplace } = req.body;
-  process.env.MONGO = mongo;
-  process.env.MARKETPLACE = false;
-  if (marketplace) {
-    process.env.MARKETPLACE = true;
-  }
-  if (!url.endsWith("/")) {
-    url = url + "/";
-  }
-  process.env.BANKAPIURL = url;
-  process.env.SECURE = false;
-  if (!banksecure) {
-    banksecure = false;
-    process.env.SECURE = false;
-  }
-  process.env.SETUP = true;
-  fs.writeFileSync(
-    ".env",
-    "BANKAPIURL=" +
-      process.env.BANKAPIURL +
-      "\n" +
-      "SECURE=" +
-      process.env.SECURE +
-      "\n" +
-      "MARKETPLACE=" +
-      process.env.MARKETPLACE +
-      "\n" +
-      "MONGO=" +
-      process.env.MONGO +
-      "\nSETUP=true"
-  );
-  dotenv.config();
-  if (process.env.MARKETPLACE) {
-    mongoose.connect(process.env.MONGO, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: true,
-    });
-
-    let db = mongoose.connection;
-    db.once("open", function () {
-      console.log("Connected to MongoDB");
-    });
-
-    //check for DB errors
-    db.on("error", function (err) {
-      console.log(err);
-    });
-  }
-  res.redirect("/");
-});
 
 function papy() {
   const rndInt = Math.floor(Math.random() * 1337);
@@ -144,32 +91,27 @@ function papy() {
 }
 
 app.get("/", async function (req, res) {
-  if (!process.env.SETUP) {
-    res.render("setup");
-  } else {
-    let checkalive;
-    try {
-      checkalive = await client.help();
-    } catch (err) {
-      console.log(err);
-    }
-    let alive = false;
-    try {
-      if (checkalive) {
-        alive = true;
-      }
-    } catch (err) {
-      console.log(err);
-    }
-
-    res.render("index", {
-      user: req.session.user,
-      admin: req.session.admin,
-      alive: alive,
-      marketplace: process.env.MARKETPLACE,
-      random: papy(),
-    });
+  let checkalive;
+  try {
+    checkalive = await client.help();
+  } catch (err) {
+    console.log(err);
   }
+  let alive = false;
+  try {
+    if (checkalive) {
+      alive = true;
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
+  res.render("index", {
+    user: req.session.user,
+    admin: req.session.admin,
+    alive: alive,
+    random: papy(),
+  });
 });
 app.get("/BankF", ensureAuthenticated, async function (req, res) {
   let successes = req.session.successes;
@@ -259,7 +201,6 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     admin: req.session.admin,
     sucesses: successes,
     errors: errors,
-    marketplace: process.env.MARKETPLACE,
     random: papy(),
   });
 });
@@ -375,13 +316,9 @@ app.use("/admin", admin);
 let settings = require("./routes/settings");
 app.use("/settings", settings);
 
-let marketplace = require("./routes/marketplace");
-app.use("/marketplace", marketplace);
-
 app.get("/logout", function (req, res) {
   req.session.regenerate(function (err) {
     res.render("login", {
-      marketplace: process.env.MARKETPLACE,
       random: papy(),
     });
   });
@@ -395,7 +332,6 @@ app.get("/login", function (req, res) {
       successes: successes,
       errors: errors,
       user: req.session.user,
-      marketplace: process.env.MARKETPLACE,
       random: papy(),
     });
   });
@@ -411,7 +347,6 @@ app.get("/register", function (req, res) {
     successes: successes,
     user: req.session.user,
     admin: req.session.admin,
-    marketplace: process.env.MARKETPLACE,
     random: papy(),
   });
 });

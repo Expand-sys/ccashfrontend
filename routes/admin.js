@@ -206,40 +206,7 @@ router.post("/changebackend", checkAdmin, async function (req, res) {
   );
   res.redirect("../");
 });
-router.post("/mongodb", checkAdmin, async function (req, res) {
-  let { url } = req.body;
-  process.env.MONGO = url;
 
-  if (process.env.MONGO.length < 3) {
-    process.env.MARKETPLACE = false;
-    console.log("false");
-  } else {
-    process.env.MARKETPLACE = true;
-    console.log("true");
-  }
-  fs.writeFileSync(
-    ".env",
-    "BANKAPIURL=" +
-      process.env.BANKAPIURL +
-      "\n" +
-      "SECURE=" +
-      process.env.SECURE +
-      "\n" +
-      "MARKETPLACE=" +
-      process.env.MARKETPLACE +
-      "\n" +
-      "MONGO=" +
-      process.env.MONGO +
-      "\nSETUP=true"
-  );
-  try {
-    mongo();
-  } catch (e) {
-    console.log(e);
-  }
-
-  res.redirect("../");
-});
 router.post("/close", checkAdmin, async function (req, res) {
   let { attempt } = req.body;
   let close;
