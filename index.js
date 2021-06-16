@@ -17,7 +17,9 @@ const mongoose = require("mongoose");
 const { CCashClient } = require("ccash-client-js");
 dotenv.config();
 const { postUser } = require("./helpers/functions.js");
-const client = new CCashClient(process.env.BANKAPIURL);
+if (process.env.BANKAPIURL) {
+  const client = new CCashClient(process.env.BANKAPIURL);
+}
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
@@ -35,22 +37,6 @@ app.use(function (req, res, next) {
   next();
 });
 app.set("trust proxy", 1); // trust first proxy
-let secure = false;
-if (
-  process.env.SECURE == "true" ||
-  process.env.SECURE == "True" ||
-  process.env.SECURE == "TRUE"
-) {
-  secure = true;
-}
-let setup = false;
-if (
-  process.env.SETUP == "true" ||
-  process.env.SETUP == "True" ||
-  process.env.SETUP == "TRUE"
-) {
-  setup = true;
-}
 app.use(
   session({
     secret: "fuck shit cunt",
@@ -59,7 +45,7 @@ app.use(
       checkPeriod: 86400000, // prune expired entries every 24h
     }),
     saveUninitialized: true,
-    cookie: { secure: secure, maxAge: 86400000 },
+    cookie: { secure: process.env.SECURE, maxAge: 86400000 },
   })
 );
 app.use(
@@ -90,7 +76,29 @@ function papy() {
   return random;
 }
 
+app.post("/setup", async function (req, res) {
+  const { url, secure } = req.body;
+  if (secure) {
+    process.env.SECURE = true;
+  }
+  process.env.BANKAPIURL = url;
+  fs.writeFileSync(
+    ".env",
+    "BANKAPIURL=" +
+      process.env.BANKAPIURL +
+      "\n" +
+      "SECURE=" +
+      process.env.SECURE +
+      "\nSETUP=true"
+  );
+  fs.mkdirSync("tmp");
+  fs.writeFileSync("tmp/restart.txt");
+});
+
 app.get("/", async function (req, res) {
+  if (setup == false || !setup) {
+    res.render("setup");
+  }
   let checkalive;
   try {
     checkalive = await client.help();
