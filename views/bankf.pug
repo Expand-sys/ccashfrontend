@@ -49,7 +49,7 @@ block content
                       p Date: #{log.time}
                       p You sent #{log.to} $#{log.amount}
                       hr
-              #received.tab-pane(role='tabpanel', aria-labelledby='contact-tab')
+              #received.tab-pane(role='tabpanel', aria-labelledby='recieved-tab')
                 .logs
                   if logrec
                     each log in logrec
@@ -57,25 +57,34 @@ block content
                       p Date: #{log.time}
                       p #{log.from} sent you $#{log.amount}
                       hr
-                        
-              #balhistory.tab-pane(role='tabpanel', aria-labelledby='contact-tab')
+              #balhistory.tab-pane(role='tabpanel', aria-labelledby='balhistory-tab')         
                 #chart_div(style="width:100%; height 100%")
                 
                 script(type='text/javascript' src='https://www.gstatic.com/charts/loader.js')
                 script(type='text/javascript').
                   
-                  google.charts.load('current', {'packages':['corechart']});
+                  google.charts.load('current', {'packages':['corechart', 'line']});
                   google.charts.setOnLoadCallback(drawChart);
                   function drawChart() {
                     var data = google.visualization.arrayToDataTable([!{graphdata}]);
 
                     var options = {
                       title: 'Balance',
-                      hAxis: {title: 'Transaction', minValue: 0, maxValue: 15, direction: 1, textPosition: 'none'},
-                      vAxis: {title: 'Balance', minValue: 0, maxValue: 500},
-                      legend: 'none',
+                      hAxis: {
+                        title: 'Transaction', 
+                        textPosition: 'out',
+                        },
+                      vAxis: {
+                        title: 'Balance',
+                        format: 'currency',
+                        textPosition: 'out',
+                        },
+                      trendlines: {
+                        0: {type: 'exponential', color: '#333', opacity: .1},
+                        1: {type: 'linear', color: '#111', opacity: .3}
+                      },
                       width: 670,
-                      height: 350
+                      height: 350,
                     };
 
                     var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
