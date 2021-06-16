@@ -1,0 +1,12 @@
+{
+  "name": "ccashfrontend",
+  "script": "index.js",
+  "watch": "tmp/restart.txt",
+  "instances": "1",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "env_production": {
+    "NODE_ENV": "production"
+  }
+}

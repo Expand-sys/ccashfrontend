@@ -12,31 +12,10 @@ const got = require("got");
 const MemoryStore = require("memorystore")(session);
 const fs = require("fs");
 const mongoose = require("mongoose");
+
 const { CCashClient } = require("ccash-client-js");
 
-const client = new CCashClient(process.env.BANKAPIURL);
 console.log("Sen was here");
-
-function mongo() {
-  if (process.env.MONGO) {
-    console.log(process.env.MONGO);
-    mongoose.connect(process.env.MONGO, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: true,
-    });
-
-    let db = mongoose.connection;
-    db.once("open", function () {
-      console.log("Connected to MongoDB");
-    });
-
-    //check for DB errors
-    db.on("error", function (err) {
-      console.log(err);
-    });
-  }
-}
 
 router.get("/", checkAdmin, function (req, res) {
   let successes = req.session.successes;
@@ -54,6 +33,7 @@ router.get("/", checkAdmin, function (req, res) {
 });
 
 router.post("/user", checkAdmin, async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   req.session.errors = [];
   req.session.successes = [];
   let { name, init_pass, init_bal, password2 } = req.body;
@@ -86,6 +66,7 @@ router.post("/user", checkAdmin, async function (req, res) {
 });
 
 router.post("/baluser", checkAdmin, async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let { name } = req.body;
   let balance;
   req.session.successes = [];
@@ -104,6 +85,7 @@ router.post("/baluser", checkAdmin, async function (req, res) {
 });
 
 router.post("/bal", checkAdmin, async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let { name, amount } = req.body;
   let patch;
   req.session.successes = [];
@@ -119,6 +101,7 @@ router.post("/bal", checkAdmin, async function (req, res) {
 });
 
 router.post("/userdelete", checkAdmin, async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let { name, attempt } = req.body;
   if (attempt != req.session.adminp) {
     req.session.errors.push({ msg: "Wrong Admin Password" });
@@ -136,6 +119,7 @@ router.post("/userdelete", checkAdmin, async function (req, res) {
 });
 
 router.post("/destroyallsessions", checkAdmin, async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let { attempt } = req.body;
   let adminTest;
   req.session.errors = [];
@@ -182,6 +166,7 @@ router.post("/changebackend", checkAdmin, async function (req, res) {
 });
 
 router.post("/close", checkAdmin, async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let { attempt } = req.body;
   let close;
   close = client.close();

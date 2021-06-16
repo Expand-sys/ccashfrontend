@@ -10,8 +10,6 @@ const session = require("express-session");
 const { postUser } = require("../helpers/functions.js");
 const { CCashClient } = require("ccash-client-js");
 
-const client = new CCashClient(process.env.BANKAPIURL);
-
 router.get("/", ensureAuthenticated, function (req, res) {
   let successes = req.session.successes;
   req.session.successes = [];
@@ -27,6 +25,7 @@ router.get("/", ensureAuthenticated, function (req, res) {
 });
 
 router.post("/pass", ensureAuthenticated, async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let { attempt, new_pass, password2 } = req.body;
   let patch;
   if (attempt == undefined) {

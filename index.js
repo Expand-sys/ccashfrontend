@@ -17,9 +17,6 @@ const mongoose = require("mongoose");
 const { CCashClient } = require("ccash-client-js");
 dotenv.config();
 const { postUser } = require("./helpers/functions.js");
-if (process.env.BANKAPIURL) {
-  const client = new CCashClient(process.env.BANKAPIURL);
-}
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
@@ -82,6 +79,7 @@ app.post("/setup", async function (req, res) {
     process.env.SECURE = true;
   }
   process.env.BANKAPIURL = url;
+  console.log(process.env.BANKAPIURL);
   fs.writeFileSync(
     ".env",
     "BANKAPIURL=" +
@@ -91,37 +89,41 @@ app.post("/setup", async function (req, res) {
       process.env.SECURE +
       "\nSETUP=true"
   );
-  fs.mkdirSync("tmp");
-  fs.writeFileSync("tmp/restart.txt");
+  fs.writeFileSync("tmp/restart.txt", "");
+  res.redirect("/");
 });
 
 app.get("/", async function (req, res) {
-  if (setup == false || !setup) {
+  if (process.env.SETUP == false || !process.env.SETUP) {
     res.render("setup");
-  }
-  let checkalive;
-  try {
-    checkalive = await client.help();
-  } catch (err) {
-    console.log(err);
-  }
-  let alive = false;
-  try {
-    if (checkalive) {
-      alive = true;
+  } else {
+    const client = new CCashClient(process.env.BANKAPIURL);
+    let checkalive;
+    try {
+      checkalive = await client.help();
+    } catch (err) {
+      console.log(err);
     }
-  } catch (err) {
-    console.log(err);
-  }
+    let alive = false;
+    try {
+      if (checkalive) {
+        alive = true;
+      }
+    } catch (err) {
+      console.log(err);
+    }
 
-  res.render("index", {
-    user: req.session.user,
-    admin: req.session.admin,
-    alive: alive,
-    random: papy(),
-  });
+    res.render("index", {
+      user: req.session.user,
+      admin: req.session.admin,
+      alive: alive,
+      url: process.env.BANKAPIURL,
+      random: papy(),
+    });
+  }
 });
 app.get("/BankF", ensureAuthenticated, async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let successes = req.session.successes;
   let errors = req.session.errors;
   req.session.errors = [];
@@ -215,6 +217,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
 });
 
 app.post("/sendfunds", async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let { amount, name, senderpass } = req.body;
   req.session.errors = [];
   req.session.successes = [];
@@ -236,6 +239,7 @@ app.post("/sendfunds", async function (req, res) {
 });
 
 app.post("/register", async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   var { name, password, password2 } = req.body;
   req.session.errors = [];
   req.session.successes = [];
@@ -264,6 +268,7 @@ app.post("/register", async function (req, res) {
 });
 
 app.post("/login", async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   if (req.session.user) {
     res.redirect("/");
   }
@@ -338,7 +343,9 @@ app.get("/register", function (req, res) {
     random: papy(),
   });
 });
-
+process.on("SIGINT", function () {
+  process.exit();
+});
 app.listen(process.env.PORT || 3000, function () {
   console.log("Server started on port 3000...");
 });
