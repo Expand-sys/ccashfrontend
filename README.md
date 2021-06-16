@@ -22,6 +22,11 @@ if you are deploying on a vps then
 If you want to properly deploy it put it behind a reverse proxy too so you can have virtual hosts and all that shizzaz
 but im not going to outline that because that is more advanced, and will require a lot of explaining, google `how to reverse proxy a nodejs app` if you want to know more
 
+### Now available as a docker image
+```docker pull expandsys/ccashfrontend```
+Then
+```docker run -dp 80:3000 expandsys/ccashfrontend```
+When you go to your ip you will find a setup page to enter the details
 
 ## Credits
 https://github.com/LukeeeeBennett/ccash-client-js - API (started using his api because it makes my code cleaner though as of writing this it needs a few changes to work but should be fixed within 24ish hours ive made a pull request)
