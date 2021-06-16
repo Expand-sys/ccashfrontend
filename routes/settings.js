@@ -48,13 +48,9 @@ router.post("/pass", ensureAuthenticated, async function (req, res) {
     console.log(req.session.errors);
     res.redirect("/settings");
   } else {
-    try {
-      patch = await client.changePassword(req.session.user, attempt, new_pass);
-    } catch (err) {
-      console.log(err);
-    }
+    patch = await client.changePassword(req.session.user, attempt, new_pass);
     console.log(patch);
-    if (patch) {
+    if (patch == -2) {
       req.session.errors.push({
         msg: "Password Wrong",
       });

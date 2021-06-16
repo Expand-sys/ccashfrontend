@@ -54,50 +54,33 @@ router.get("/", checkAdmin, function (req, res) {
 });
 
 router.post("/user", checkAdmin, async function (req, res) {
-  let { name, init_pass, init_bal, password2 } = req.body;
-  let contains;
-  try {
-    contains = await client.contains(name);
-  } catch (e) {
-    console.log(e);
-  }
   req.session.errors = [];
   req.session.successes = [];
-  if (contains == true) {
-    errors.push({ msg: "User already exists" });
-    res.render("adminsettings", {
-      errors: errors,
+  let { name, init_pass, init_bal, password2 } = req.body;
+  if (!name || !init_pass || !init_bal || !password2) {
+    req.session.errors.push({ msg: "please fill in all fields" });
+  } else if (init_pass !== password2) {
+    req.session.errors.push({ msg: "Passwords don't match" });
+  } else if (init_pass.length < 6) {
+    req.session.errors.push({
+      msg: "Password must be at least 6 characters",
     });
+  }
+  let post = await client.adminAddUser(
+    name,
+    req.session.adminp,
+    init_pass,
+    parseInt(init_bal)
+  );
+  console.log(post);
+  if (post == -3) {
+    req.session.errors.push({ msg: "Invalid Request" });
+  } else if (post == -4) {
+    req.session.errors.push({ msg: "Name too long" });
+  } else if (post == -5) {
+    req.session.errors.push({ msg: "User already exists" });
   } else {
-    if (!name || !init_pass || !init_bal || !password2) {
-      req.session.errors.push({ msg: "please fill in all fields" });
-    }
-    //check if match
-    if (init_pass !== password2) {
-      req.session.errors.push({ msg: "Passwords don't match" });
-    }
-
-    //check if password is more than 6 characters
-    if (init_pass.length < 6) {
-      req.session.errors.push({
-        msg: "Password must be at least 6 characters",
-      });
-    }
-    let post;
-    let successes = [];
-    try {
-      post = await client.adminAddUser(
-        name,
-        req.session.adminp,
-        init_pass,
-        parseInt(init_bal)
-      );
-    } catch (err) {
-      console.log(err);
-    }
-    if (post) {
-      req.session.successes.push({ msg: "Account Creation Successful" });
-    }
+    req.session.successes.push({ msg: "Account Creation Successful" });
   }
   res.redirect("/admin");
 });
@@ -107,11 +90,8 @@ router.post("/baluser", checkAdmin, async function (req, res) {
   let balance;
   req.session.successes = [];
   req.session.errors = [];
-  try {
-    balance = await client.balance(name);
-  } catch (err) {
-    console.log(err);
-  }
+  balance = await client.balance(name);
+  console.log(balance.body);
   balance = parseInt(balance);
   if (balance < 0) {
     req.session.errors.push({ msg: "User not found" });
@@ -128,36 +108,28 @@ router.post("/bal", checkAdmin, async function (req, res) {
   let patch;
   req.session.successes = [];
   req.session.errors = [];
-  try {
-    patch = await client.setBalance(name, req.session.adminp, parseInt(amount));
-  } catch (err) {
-    console.log(err);
-  }
-  if (patch) {
+  patch = await client.setBalance(name, req.session.adminp, parseInt(amount));
+  console.log(patch);
+  if (patch == -1) {
+    req.session.errors.push({ msg: "User not Found" });
+  } else if (patch == 1) {
     req.session.successes.push({ msg: "Change Funds Successful" });
   }
   res.redirect("/admin");
 });
+
 router.post("/userdelete", checkAdmin, async function (req, res) {
   let { name, attempt } = req.body;
-  console.log(name);
-  let contains;
-  try {
-    contains = await client.contains(name);
-  } catch (e) {
-    console.log(e);
-  }
   if (attempt != req.session.adminp) {
     req.session.errors.push({ msg: "Wrong Admin Password" });
     res.redirect("/admin");
   } else {
-    console.log(contains);
-    if (contains == 1) {
-      let deleteUser = client.adminDeleteUser(name, attempt);
-      req.session.successes.push({ msg: "User Deletion Successful" });
+    let deleteUser = client.adminDeleteUser(name, attempt);
+    if (deleteUser == -1) {
+      req.session.errors.push({ msg: "User Deletion Failed, User Not Found" });
       res.redirect("/admin");
     } else {
-      req.session.errors.push({ msg: "User Deletion Failed, User Not Found" });
+      req.session.successes.push({ msg: "User Deletion Successful" });
       res.redirect("/admin");
     }
   }
@@ -168,7 +140,7 @@ router.post("/destroyallsessions", checkAdmin, async function (req, res) {
   let adminTest;
   req.session.errors = [];
   try {
-    adminTest = await client.adminVerifyPass(attempt);
+    adminTest = await client.adminVerifyPassword(attempt);
   } catch (err) {
     console.log(err);
   }

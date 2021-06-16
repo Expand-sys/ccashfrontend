@@ -137,6 +137,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
   } catch (e) {
     console.log(e);
   }
+  console.log(logsent);
   let logrec = logsent;
   let graphlog = logsent;
   if (graphlog != null) {
@@ -211,56 +212,46 @@ app.post("/sendfunds", async function (req, res) {
   req.session.successes = [];
   let a_name = req.session.user;
   let result;
-  try {
-    result = await client.sendFunds(a_name, senderpass, name, amount);
-  } catch (e) {
-    console.log(e);
-  }
+  result = await client.sendFunds(a_name, senderpass, name, amount);
   console.log(result);
-  if (result == true || result) {
+  if (result == 1) {
     req.session.successes.push({ msg: "Transfer successful" });
     //post details
     res.redirect("/BankF");
-  } else {
-    req.session.errors.push({ msg: "Transfer Unsuccessful" });
+  } else if (result == -1) {
+    req.session.errors.push({ msg: "Transfer Unsuccessful: User not Found" });
+    res.redirect("/Bankf");
+  } else if (result == -2) {
+    req.session.errors.push({ msg: "Transfer Unsuccessful: Wrong Password" });
     res.redirect("/Bankf");
   }
 });
 
 app.post("/register", async function (req, res) {
   var { name, password, password2 } = req.body;
-  let checkuser;
-  try {
-    checkuser = await client.contains(name);
-  } catch (e) {
-    console.log(e);
-  }
-
   req.session.errors = [];
   req.session.successes = [];
-  if (!checkuser) {
-    if (!name || !password || !password2) {
-      req.session.errors.push({ msg: "please fill in all fields" });
-    }
-    if (password !== password2) {
-      req.session.errors.push({ msg: "Passwords don't match" });
-    }
-    if (password.length < 6) {
-      req.session.errors.push({
-        msg: "Password must be at least 6 characters",
-      });
-    }
-    if (req.session.errors[0]) {
+  if (!name || !password || !password2) {
+    req.session.errors.push({ msg: "please fill in all fields" });
+  } else if (password !== password2) {
+    req.session.errors.push({ msg: "Passwords don't match" });
+  } else if (password.length < 6) {
+    req.session.errors.push({
+      msg: "Password must be at least 6 characters",
+    });
+  } else {
+    let checkuser = await postUser(name, password);
+    console.log(checkuser);
+    if (checkuser == -4) {
+      req.session.errors.push({ msg: "Error: Name too long" });
+      res.redirect("/register");
+    } else if (checkuser == -5) {
+      req.session.errors.push({ msg: "Error: User Already Exists" });
       res.redirect("/register");
     } else {
-      if (postUser(name, password)) {
-        req.session.successes.push({ msg: "User Registered Please Log In" });
-        res.redirect("/login");
-      }
+      req.session.successes.push({ msg: "Account Created! please Log in" });
+      res.redirect("/login");
     }
-  } else {
-    req.session.errors.push({ msg: "User already exists" });
-    res.redirect("/register");
   }
 });
 
@@ -272,11 +263,12 @@ app.post("/login", async function (req, res) {
   const { name, password } = req.body;
   let adminTest;
   try {
-    adminTest = await client.adminVerifyPass(password);
+    adminTest = await client.adminVerifyPassword(password);
   } catch (err) {
     console.log(err);
   }
-  if (adminTest) {
+  console.log(adminTest);
+  if (adminTest != -2) {
     req.session.admin = adminTest;
     req.session.adminp = password;
     req.session.user = name;
@@ -284,20 +276,16 @@ app.post("/login", async function (req, res) {
     res.redirect("/BankF");
   } else {
     let verified;
-    try {
-      verified = await client.verifyPassword(name, password);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      if (!verified) {
-        req.session.errors = [];
-        req.session.errors.push({ msg: "Password wrong" });
-        res.redirect("/login");
-      } else {
-        req.session.user = name;
-        req.session.password = password;
-        res.redirect("/BankF");
-      }
+    verified = await client.verifyPassword(name, password);
+    console.log(verified);
+    if (verified == 1) {
+      req.session.user = name;
+      req.session.password = password;
+      res.redirect("/BankF");
+    } else {
+      req.session.errors = [];
+      req.session.errors.push({ msg: "Password wrong" });
+      res.redirect("/login");
     }
   }
 });
