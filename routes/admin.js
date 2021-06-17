@@ -1,13 +1,14 @@
+const root = process.env.PWD;
 const express = require("express");
 const router = express.Router();
 const path = require("path");
-const { ensureAuthenticated } = require("../config/auth.js");
-const { checkAdmin } = require("../config/admin.js");
+const { ensureAuthenticated } = require(`${root}/config/auth.js`);
+const { checkAdmin } = require(`${root}/config/admin.js`);
 const pug = require("pug");
 const flash = require("connect-flash");
 const expressValidator = require("express-validator");
 const session = require("express-session");
-const { postUser } = require("../helpers/functions.js");
+const { postUser } = require(`${root}/helpers/functions.js`);
 const got = require("got");
 const MemoryStore = require("memorystore")(session);
 const fs = require("fs");
@@ -146,7 +147,7 @@ router.post("/changebackend", checkAdmin, async function (req, res) {
   }
   process.env.BANKAPIURL = url;
   fs.writeFileSync(
-    ".env",
+    `${root}/.env`,
     "BANKAPIURL=" +
       process.env.BANKAPIURL +
       "\n" +
@@ -160,8 +161,8 @@ router.post("/changebackend", checkAdmin, async function (req, res) {
       process.env.MONGO +
       "\nSETUP=true"
   );
-  fs.mkdirSync("tmp");
-  fs.writeFileSync("tmp/restart.txt", "");
+  fs.mkdirSync(`${root}/tmp`);
+  fs.writeFileSync(`${root}tmp/restart.txt`, "");
   res.redirect("../");
 });
 

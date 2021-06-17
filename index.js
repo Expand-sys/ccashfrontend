@@ -1,3 +1,4 @@
+const root = process.env.PWD;
 const express = require("express");
 const path = require("path");
 const https = require("https");
@@ -6,17 +7,16 @@ const bodyParser = require("body-parser");
 const expressValidator = require("express-validator");
 const flash = require("connect-flash");
 const session = require("express-session");
-const { ensureAuthenticated } = require("./config/auth.js");
+const { ensureAuthenticated } = require(`${root}/config/auth.js`);
 const app = express();
 const MemoryStore = require("memorystore")(session);
 const url = require("url");
 const dotenv = require("dotenv");
 const fs = require("fs");
-let Log = require("./schemas/log.js");
 const mongoose = require("mongoose");
 const { CCashClient } = require("ccash-client-js");
 dotenv.config();
-const { postUser } = require("./helpers/functions.js");
+const { postUser } = require(`${root}/helpers/functions.js`);
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
@@ -34,6 +34,7 @@ app.use(function (req, res, next) {
   next();
 });
 app.set("trust proxy", 1); // trust first proxy
+const secure = process.env.SECURE;
 app.use(
   session({
     secret: "fuck shit cunt",
@@ -42,7 +43,7 @@ app.use(
       checkPeriod: 86400000, // prune expired entries every 24h
     }),
     saveUninitialized: true,
-    cookie: { secure: process.env.SECURE, maxAge: 86400000 },
+    cookie: { secure: secure, maxAge: 86400000 },
   })
 );
 app.use(
@@ -245,7 +246,7 @@ app.post("/register", async function (req, res) {
   req.session.successes = [];
   if (!name || !password || !password2) {
     req.session.errors.push({ msg: "please fill in all fields" });
-  } else if (password !== password2) {
+  } else if (password != password2) {
     req.session.errors.push({ msg: "Passwords don't match" });
   } else if (password.length < 6) {
     req.session.errors.push({

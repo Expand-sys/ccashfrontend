@@ -1,13 +1,14 @@
+const root = process.env.PWD;
 const express = require("express");
 const router = express.Router();
 const path = require("path");
-const { ensureAuthenticated } = require("../config/auth.js");
-const { checkAdmin } = require("../config/admin.js");
+const { ensureAuthenticated } = require(`${root}/config/auth.js`);
+const { checkAdmin } = require(`${root}/config/admin.js`);
 var pug = require("pug");
 const flash = require("connect-flash");
 const expressValidator = require("express-validator");
 const session = require("express-session");
-const { postUser } = require("../helpers/functions.js");
+const { postUser } = require(`${root}/helpers/functions.js`);
 const { CCashClient } = require("ccash-client-js");
 
 router.get("/", ensureAuthenticated, function (req, res) {
