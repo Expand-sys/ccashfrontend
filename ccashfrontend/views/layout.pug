@@ -1,0 +1,57 @@
+doctype html
+html
+  head
+    title CCashBank
+    link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css", integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z", crossorigin="anonymous")
+    link(rel="preconnect" href="https://fonts.gstatic.com")
+    link(href="https://fonts.googleapis.com/css2?family=Lato&family=Montserrat&display=swap" rel="stylesheet")
+    if random == true
+      link(rel='stylesheet' href='/css/papy.css')
+    if random == false || random == null
+      link(rel='stylesheet' href='/css/style.css')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+  body
+    nav.navbar.navbar-expand-lg.navbar-dark.navbarrr.shadow-lg
+      .container
+        a.navbar-brand(href='/')
+          img(src="/CCashLogo3.png" style="width:75px; height:74px")
+        button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbars', aria-controls='navbars', aria-expanded='false', aria-label='Toggle navigation')
+          span.navbar-toggler-icon
+        #navbars.collapse.navbar-collapse
+          ul.navbar-nav.mr-auto
+          
+          ul.navbar-nav.mr-right.text-white
+            if user == undefined
+              li.nav-item
+                a.nav-link(href='/login').text-white Login
+              li.nav-item
+                a.nav-link(href='/register').text-white Register
+            
+            if user
+              li.nav-item
+                a.nav-link(href='/logout').text-white Log out
+              li.nav-item
+                a.nav-link(href='/BankF').text-white Bank
+              li.nav-item
+                a.nav-link(href='/settings').text-white Settings
+              if admin == true
+                li.nav-item
+                  a.nav-link(href='/admin').text-white Admin
+    .container
+      != messages('message', locals)
+      if errors 
+        each error, i in errors
+          div(class="alert alert-danger") #{error.msg}  
+      if successes
+        each success, i in successes
+          div(class="alert alert-success") #{success.msg}  
+    br
+    br
+    block content
+    br
+    hr
+    
+    script(src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI="
+    crossorigin="anonymous")
+    script(src='/js/main.js')
+    script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js", integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV", crossorigin="anonymous")

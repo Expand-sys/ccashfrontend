@@ -1,0 +1,97 @@
+extends layout
+
+
+block content
+  .container
+    h1 Welcome to the bank interface #{user}
+    .card.shadow-lg
+      .row 
+        .col
+          h2 Send Funds 
+        .col
+          h4 Balance: #{balance}
+      hr
+      .row 
+        .col-4
+          form(method='POST', action='/sendfunds')
+            label Amount to Send:
+            br
+            input.form-control-lg.shadow(type="number" min="0" max=balance name="amount")
+            br
+            br
+            label Reciever:
+            br
+            input.form-control-lg.shadow(name='name', type='text')
+            br
+            br
+            label Your Password:
+            br
+            input.form-control-lg.shadow(name='senderpass', type='password')
+            br
+            br
+            input.btn.btn-primary(type='submit', value='Submit')
+        .col-8
+          .card
+          
+            ul#transactions.nav.nav-tabs.card-header-tabs(role='tablist')
+              li.nav-item
+                a.nav-link.active.text-black(href='#sent', role='tab', aria-controls='sent', aria-selected='true') Sent
+              li.nav-item
+                a.nav-link.text-black(href='#received', role='tab', aria-controls='recieved', aria-selected='false') Recieved
+              li.nav-item
+                a.nav-link.text-black(href='#balhistory', role='tab', aria-controls='balhistory', aria-selected='false') Balance History
+            .tab-content.mt-3
+              #sent.tab-pane.active(role='tabpanel')
+                .logs
+                  if logsent
+                    each log in logsent
+                      hr
+                      p Date: #{log.time}
+                      p You sent #{log.to} $#{log.amount}
+                      hr
+              #received.tab-pane(role='tabpanel', aria-labelledby='recieved-tab')
+                .logs
+                  if logrec
+                    each log in logrec
+                      hr
+                      p Date: #{log.time}
+                      p #{log.from} sent you $#{log.amount}
+                      hr
+              #balhistory.tab-pane(role='tabpanel', aria-labelledby='balhistory-tab')         
+                #chart_div(style="width:100%; height 100%")
+                
+                script(type='text/javascript' src='https://www.gstatic.com/charts/loader.js')
+                script(type='text/javascript').
+                  
+                  google.charts.load('current', {'packages':['corechart', 'line']});
+                  google.charts.setOnLoadCallback(drawChart);
+                  function drawChart() {
+                    var data = google.visualization.arrayToDataTable([!{graphdata}]);
+
+                    var options = {
+                      title: 'Balance',
+                      hAxis: {
+                        title: 'Transaction', 
+                        textPosition: 'out',
+                        },
+                      vAxis: {
+                        title: 'Balance',
+                        format: 'currency',
+                        textPosition: 'out',
+                        },
+                      trendlines: {
+                        0: {type: 'exponential', color: '#333', opacity: .5},
+                        1: {type: 'linear', color: '#111', opacity: .3}
+                      },
+                      width: 670,
+                      height: 350,
+                    };
+
+                    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+
+                    chart.draw(data, options);
+                    window.onload = resize;
+                    window.onresize = resize;
+                  }
+
+    br

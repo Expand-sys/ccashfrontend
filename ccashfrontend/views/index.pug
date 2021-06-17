@@ -1,0 +1,13 @@
+extends layout
+
+
+block content
+  .container
+    h1 Welcome to CCashBank Front End
+    .card.shadow-lg
+      center
+        h4 Is the server online?
+        if alive 
+          h4 YES!
+        if !alive 
+          H4 no :(
