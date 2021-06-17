@@ -1,0 +1,6 @@
+{
+  "name": "ccashfrontend",
+  "script": "/app/ccashfrontend/index.js",
+  "watch": "/app/ccashfrontend/tmp/restart.txt",
+  "instances": "1"
+}
