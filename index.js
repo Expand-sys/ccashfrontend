@@ -15,7 +15,7 @@ const dotenv = require("dotenv");
 const fs = require("fs");
 const mongoose = require("mongoose");
 const { CCashClient } = require("ccash-client-js");
-dotenv.config();
+dotenv.config({ path: ".env" });
 const { postUser } = require(`${root}/helpers/functions.js`);
 
 app.set("views", path.join(__dirname, "views"));
@@ -34,7 +34,10 @@ app.use(function (req, res, next) {
   next();
 });
 app.set("trust proxy", 1); // trust first proxy
-const secure = process.env.SECURE;
+const secure = false;
+if (process.env.SECURE == true) {
+  secure = true;
+}
 app.use(
   session({
     secret: "fuck shit cunt",
@@ -81,8 +84,9 @@ app.post("/setup", async function (req, res) {
   }
   process.env.BANKAPIURL = url;
   console.log(process.env.BANKAPIURL);
+  fs.rmSync(`/app/config/.env`);
   fs.writeFileSync(
-    ".env",
+    `/app/config/.env`,
     "BANKAPIURL=" +
       process.env.BANKAPIURL +
       "\n" +
@@ -90,7 +94,8 @@ app.post("/setup", async function (req, res) {
       process.env.SECURE +
       "\nSETUP=true"
   );
-  fs.writeFileSync("tmp/restart.txt", "");
+
+  fs.writeFileSync(`${root}/tmp/restart.txt`, "");
   res.redirect("/");
 });
 
@@ -101,7 +106,7 @@ app.get("/", async function (req, res) {
     const client = new CCashClient(process.env.BANKAPIURL);
     let checkalive;
     try {
-      checkalive = await client.help();
+      checkalive = await client.ping();
     } catch (err) {
       console.log(err);
     }
@@ -135,11 +140,7 @@ app.get("/BankF", ensureAuthenticated, async function (req, res) {
     console.log(err);
   }
   let balance = 0;
-  try {
-    balance = await client.balance(req.session.user);
-  } catch (err) {
-    console.log(err);
-  }
+  balance = await client.balance(req.session.user);
   let logsent;
   console.log("start " + Date.now());
   try {
