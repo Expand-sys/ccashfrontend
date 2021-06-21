@@ -1,38 +1,37 @@
 const root = process.env.PWD;
-const express = require("express");
+require("pino-pretty");
 const fastify = require("fastify")({
-  logger: true,
+  //logger: { prettyPrint: true },
 });
 const fastifyFlash = require("fastify-flash");
 
 const path = require("path");
-
 const got = require("got");
-const bodyParser = require("body-parser");
-const { ensureAuthenticated } = require(`${root}/config/auth.js`);
-const app = express();
 const url = require("url");
 const dotenv = require("dotenv");
+
 const fs = require("fs");
-const mongoose = require("mongoose");
 const { CCashClient } = require("ccash-client-js");
 dotenv.config({ path: ".env" });
-const { postUser } = require(`${root}/helpers/functions.js`);
-
+fastify.register(require("fastify-formbody"));
 fastify.register(require("fastify-static"), {
   root: path.join(__dirname, "public"),
   prefix: "/", // optional: default '/'
 });
+
 fastify.register(require("fastify-secure-session"), {
   // the name of the session cookie, defaults to 'session'
-  cookieName: "fuckineedalongasscookieandthiswilldo",
+  cookieName: "session",
   // adapt this to point to the directory where secret-key is located
   key: fs.readFileSync(path.join(__dirname, "secret-key")),
   cookie: {
     path: "/",
     // options for setCookie, see https://github.com/fastify/fastify-cookie
+    secure: false,
+    httpOnly: true,
   },
 });
+fastify.register(fastifyFlash);
 fastify.register(require("point-of-view"), {
   engine: {
     pug: require("pug"),
@@ -51,17 +50,23 @@ function papy() {
   }
   return random;
 }
-
-app.post("/setup", async function (req, res) {
+function validate(req, res, next) {
+  if (!req.session.get("user")) {
+    res.redirect("/login");
+  } else {
+    next();
+  }
+}
+fastify.post("/setup", async function (req, res) {
   const { url, secure } = req.body;
   if (secure) {
     process.env.SECURE = true;
   }
   process.env.BANKAPIURL = url;
   console.log(process.env.BANKAPIURL);
-  fs.rmSync(`/app/config/.env`);
+  fs.rmSync(`${root}/.env`);
   fs.writeFileSync(
-    `/app/config/.env`,
+    `${root}/.env`,
     "BANKAPIURL=" +
       process.env.BANKAPIURL +
       "\n" +
@@ -74,9 +79,9 @@ app.post("/setup", async function (req, res) {
   res.redirect("/");
 });
 
-fastify.get("/", async function (req, reply) {
+fastify.get("/", async function (req, res) {
   if (process.env.SETUP == false || !process.env.SETUP) {
-    reply.view("setup");
+    res.view("setup");
   } else {
     const client = new CCashClient(process.env.BANKAPIURL);
     let checkalive;
@@ -94,7 +99,7 @@ fastify.get("/", async function (req, reply) {
       console.log(err);
     }
 
-    reply.view("index", {
+    res.view("index", {
       user: req.session.get("user"),
       admin: req.session.get("admin"),
       alive: alive,
@@ -105,33 +110,28 @@ fastify.get("/", async function (req, reply) {
 fastify.get(
   "/BankF",
   {
-    preValidation: function (req, res, done) {
-      if (req.session.user != undefined) {
-        return done();
-      }
-      req.session.errors = [];
-      req.session.errors.push({ msg: "please login to view this resource" });
-      reply.redirect("/login");
-    },
+    preValidation: [validate],
   },
   async function (req, res) {
     const client = new CCashClient(process.env.BANKAPIURL);
-    let successes = req.session.successes;
-    let errors = req.session.errors;
-    req.session.errors = [];
+    let successes = req.session.get("successes");
+    req.session.set("successes", "");
+    let errors = req.session.get("errors");
+    req.session.set("errors", "");
     let admin;
     try {
-      admin = req.session.admin;
+      admin = req.session.get("admin");
     } catch (err) {
       console.log(err);
     }
     let balance = 0;
-    balance = await client.balance(req.session.user);
+    balance = await client.balance(req.session.get("user"));
     console.log(balance);
     let logsent;
     console.log("start " + Date.now());
     try {
-      const { user, password } = req.session;
+      const user = req.session.get("user");
+      const password = req.session.get("password");
       logsent = await client.log(user, password);
     } catch (e) {
       console.log(e);
@@ -146,7 +146,7 @@ fastify.get(
     let currentbal = balance;
     if (graphlog) {
       for (i = graphlog.length - 1; i > -1; i--) {
-        if (graphlog[i].from == req.session.user) {
+        if (graphlog[i].from == req.session.get("user")) {
           currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
           graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
         } else {
@@ -165,12 +165,14 @@ fastify.get(
     if (logsent == null) {
       logsent = undefined;
     } else {
-      logsent = await logsent.filter(({ from }) => from === req.session.user);
+      logsent = await logsent.filter(
+        ({ from }) => from === req.session.get("user")
+      );
     }
     if (logrec == null) {
       logrec = undefined;
     } else {
-      logrec = await logrec.filter(({ to }) => to === req.session.user);
+      logrec = await logrec.filter(({ to }) => to === req.session.get("user"));
     }
     if (logsent) {
       for (i in logrec) {
@@ -204,52 +206,59 @@ fastify.get(
   }
 );
 
-fastify.post("/sendfunds", async function (req, res) {
-  const client = new CCashClient(process.env.BANKAPIURL);
-  let { amount, name, senderpass } = req.body;
-  req.session.errors = [];
-  req.session.successes = [];
-  let a_name = req.session.user;
-  let result;
-  result = await client.sendFunds(a_name, senderpass, name, amount);
-  console.log(result);
-  if (result == 1) {
-    req.session.successes.push({ msg: "Transfer successful" });
-    //post details
-    res.redirect("/BankF");
-  } else if (result == -1) {
-    req.session.errors.push({ msg: "Transfer Unsuccessful: User not Found" });
-    res.redirect("/Bankf");
-  } else if (result == -2) {
-    req.session.errors.push({ msg: "Transfer Unsuccessful: Wrong Password" });
-    res.redirect("/Bankf");
+fastify.post(
+  "/sendfunds",
+  {
+    preValidation: [validate],
+  },
+  async function (req, res) {
+    const client = new CCashClient(process.env.BANKAPIURL);
+    let { amount, name, senderpass } = req.body;
+    req.session.set("errors", "");
+    req.session.set("successes", "");
+    let a_name = req.session.get("user");
+    let result;
+    result = await client.sendFunds(a_name, senderpass, name, amount);
+    console.log(result);
+    if (result == 1) {
+      req.session.set("successes", "Transfer successful");
+      //post details
+      res.redirect("/BankF");
+    } else if (result == -1) {
+      req.session.set("errors", "Transfer Unsuccessful: User not Found");
+      res.redirect("/BankF");
+    } else if (result == -2) {
+      req.session.set("errors", "Transfer Unsuccessful: Wrong Password");
+      res.redirect("/BankF");
+    }
   }
-});
+);
 
 fastify.post("/register", async function (req, res) {
   const client = new CCashClient(process.env.BANKAPIURL);
   var { name, password, password2 } = req.body;
-  req.session.errors = [];
-  req.session.successes = [];
+  req.session.set("successes", "");
+  req.session.set("errors", "");
   if (!name || !password || !password2) {
-    req.session.errors.push({ msg: "please fill in all fields" });
+    req.session.set("errors", "please fill in all fields");
+    res.redirect("/register");
   } else if (password != password2) {
-    req.session.errors.push({ msg: "Passwords don't match" });
+    req.session.set("errors", "Passwords don't match");
+    res.redirect("/register");
   } else if (password.length < 6) {
-    req.session.errors.push({
-      msg: "Password must be at least 6 characters",
-    });
+    req.session.set("errors", "Password must be at least 6 characters");
+    res.redirect("/register");
   } else {
-    let checkuser = await postUser(name, password);
-    console.log(checkuser);
+    let checkuser = await client.addUser(name, password);
+    console.log(await checkuser);
     if (checkuser == -4) {
-      req.session.errors.push({ msg: "Error: Name too long" });
+      req.session.set("errors", "Error: Name too long");
       res.redirect("/register");
     } else if (checkuser == -5) {
-      req.session.errors.push({ msg: "Error: User Already Exists" });
+      req.session.set("errors", "Error: User Already Exists");
       res.redirect("/register");
     } else {
-      req.session.successes.push({ msg: "Account Created! please Log in" });
+      req.session.set("successes", "Account Created! please Log in");
       res.redirect("/login");
     }
   }
@@ -257,10 +266,9 @@ fastify.post("/register", async function (req, res) {
 
 fastify.post("/login", async function (req, res) {
   const client = new CCashClient(process.env.BANKAPIURL);
-  if (req.session.user) {
+  if (req.session.get("user")) {
     res.redirect("/");
   }
-  req.session.destroySession(function (err) {});
   const { name, password } = req.body;
   let adminTest;
   try {
@@ -270,64 +278,66 @@ fastify.post("/login", async function (req, res) {
   }
   console.log(adminTest);
   if (adminTest != -2) {
-    req.session.admin = adminTest;
-    req.session.adminp = password;
-    req.session.user = name;
-    req.session.password = password;
+    req.session.set("admin", adminTest);
+    req.session.set("adminp", password);
+    req.session.set("user", name);
+    req.session.set("password", password);
     res.redirect("/BankF");
   } else {
     let verified;
     verified = await client.verifyPassword(name, password);
     console.log(verified);
     if (verified == 1) {
-      req.session.user = name;
-      req.session.password = password;
+      req.session.set("user", name);
+      req.session.set("password", password);
       res.redirect("/BankF");
     } else {
-      req.session.errors = [];
-      req.session.errors.push({ msg: "Password wrong" });
+      req.session.set("errors", ["Password wrong"]);
       res.redirect("/login");
     }
   }
 });
 
-let admin = require("./routes/admin");
-fastify.all("/admin", admin);
+fastify.register(require("./routes/admin"), { prefix: "/admin" });
 
-let settings = require("./routes/settings");
-fastify.all("/settings", settings);
+fastify.register(require("./routes/settings"), { prefix: "/settings" });
 
 fastify.get("/logout", function (req, res) {
-  req.destroySession(function (err) {
-    res.view("login", {
-      random: papy(),
-    });
+  let successes = req.session.get("successes");
+  let errors = req.session.get("errors");
+  req.session.delete();
+
+  req.session.delete();
+  res.view("login", {
+    random: papy(),
+    successes: successes,
+    errors: errors,
   });
 });
 
 fastify.get("/login", function (req, res) {
-  let successes = req.session.successes;
-  let errors = req.session.errors;
-  req.session.destroySession(function (err) {
-    res.view("login", {
-      successes: successes,
-      errors: errors,
-      user: req.session.user,
-      random: papy(),
-    });
+  let successes = req.session.get("successes");
+  req.session.set("successes", "");
+  let errors = req.session.get("errors");
+  req.session.set("errors", "");
+  res.view("login", {
+    successes: successes,
+    errors: errors,
+    user: req.session.get("user"),
+    random: papy(),
   });
 });
 
 fastify.get("/register", function (req, res) {
-  let successes = req.session.successes;
-  req.session.successes = [];
-  let errors = req.session.errors;
-  req.session.errors = [];
+  let successes = req.session.get("successes");
+  req.session.set("successes", "");
+  let errors = req.session.get("errors");
+  req.session.set("errors", "");
   res.view("register", {
-    errors: errors,
     successes: successes,
-    user: req.session.user,
-    admin: req.session.admin,
+    errors: errors,
+    user: req.session.get("user"),
+    admin: req.session.get("admin"),
     random: papy(),
   });
 });

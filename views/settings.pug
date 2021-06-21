@@ -4,7 +4,7 @@ extends layout
 block content
   .container
     h1 Settings, logged in as: #{user}
-    .card
+    .card.shadow
       h4 Change password
       form(method='POST', action='/settings/pass')
         #form-group
@@ -16,3 +16,16 @@ block content
           input.form-control(name='password2',type='password')
         br
         input.btn.btn-primary(type='submit',value='Submit')
+    br
+    br
+    .card.shadow
+      h4 DELETE ACCOUNT
+      p Dont do this unless you want your account deleted, hate that i have to put warnings on this but there is no undo
+      form(method='POST', action='/settings/delete')
+        #form-group
+          label Current Password:
+          input.form-control(name='password',type='password')
+          label Confirm:
+          input.form-control(name='password2',type='password')
+        br
+        input.btn.btn-danger(type='submit',value='DELETE')

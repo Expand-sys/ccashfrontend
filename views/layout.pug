@@ -39,11 +39,9 @@ html
                   a.nav-link(href='/admin').text-white Admin
     .container
       if errors 
-        each error, i in errors
-          div(class="alert alert-danger") #{error.msg}  
+        div(class="alert alert-danger") #{errors}  
       if successes
-        each success, i in successes
-          div(class="alert alert-success") #{success.msg}  
+        div(class="alert alert-success") #{successes}  
     br
     br
     block content
