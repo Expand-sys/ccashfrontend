@@ -1,15 +1,16 @@
 const root = process.env.PWD;
 const express = require("express");
+const fastify = require("fastify")({
+  logger: true,
+});
+const fastifyFlash = require("fastify-flash");
+
 const path = require("path");
-const https = require("https");
+
 const got = require("got");
 const bodyParser = require("body-parser");
-const expressValidator = require("express-validator");
-const flash = require("connect-flash");
-const session = require("express-session");
 const { ensureAuthenticated } = require(`${root}/config/auth.js`);
 const app = express();
-const MemoryStore = require("memorystore")(session);
 const url = require("url");
 const dotenv = require("dotenv");
 const fs = require("fs");
@@ -18,55 +19,29 @@ const { CCashClient } = require("ccash-client-js");
 dotenv.config({ path: ".env" });
 const { postUser } = require(`${root}/helpers/functions.js`);
 
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "pug");
-app.use(flash());
-app.use(require("connect-flash")());
-app.use(express.static(path.join(__dirname, "public")));
-app.use(express.json());
-app.use(
-  bodyParser.urlencoded({
-    extended: true,
-  })
-);
-app.use(function (req, res, next) {
-  res.locals.messages = require("express-messages")(req, res);
-  next();
+fastify.register(require("fastify-static"), {
+  root: path.join(__dirname, "public"),
+  prefix: "/", // optional: default '/'
 });
-app.set("trust proxy", 1); // trust first proxy
-const secure = false;
-if (process.env.SECURE == true) {
-  secure = true;
-}
-app.use(
-  session({
-    secret: "fuck shit cunt",
-    resave: true,
-    store: new MemoryStore({
-      checkPeriod: 86400000, // prune expired entries every 24h
-    }),
-    saveUninitialized: true,
-    cookie: { secure: secure, maxAge: 86400000 },
-  })
-);
-app.use(
-  expressValidator({
-    errorFormatter: function (param, msg, value) {
-      var namespace = param.split("."),
-        root = namespace.shift(),
-        formParam = root;
-
-      while (namespace.length) {
-        formParam += "[" + namespace.shift() + "]";
-      }
-      return {
-        param: formParam,
-        msg: msg,
-        value: value,
-      };
-    },
-  })
-);
+fastify.register(require("fastify-secure-session"), {
+  // the name of the session cookie, defaults to 'session'
+  cookieName: "fuckineedalongasscookieandthiswilldo",
+  // adapt this to point to the directory where secret-key is located
+  key: fs.readFileSync(path.join(__dirname, "secret-key")),
+  cookie: {
+    path: "/",
+    // options for setCookie, see https://github.com/fastify/fastify-cookie
+  },
+});
+fastify.register(require("point-of-view"), {
+  engine: {
+    pug: require("pug"),
+  },
+  defaultContext: {
+    random: papy(),
+  },
+  root: path.join(__dirname, "views"),
+});
 
 function papy() {
   const rndInt = Math.floor(Math.random() * 1337);
@@ -99,9 +74,9 @@ app.post("/setup", async function (req, res) {
   res.redirect("/");
 });
 
-app.get("/", async function (req, res) {
+fastify.get("/", async function (req, reply) {
   if (process.env.SETUP == false || !process.env.SETUP) {
-    res.render("setup");
+    reply.view("setup");
   } else {
     const client = new CCashClient(process.env.BANKAPIURL);
     let checkalive;
@@ -119,106 +94,117 @@ app.get("/", async function (req, res) {
       console.log(err);
     }
 
-    res.render("index", {
-      user: req.session.user,
-      admin: req.session.admin,
+    reply.view("index", {
+      user: req.session.get("user"),
+      admin: req.session.get("admin"),
       alive: alive,
       url: process.env.BANKAPIURL,
-      random: papy(),
     });
   }
 });
-app.get("/BankF", ensureAuthenticated, async function (req, res) {
-  const client = new CCashClient(process.env.BANKAPIURL);
-  let successes = req.session.successes;
-  let errors = req.session.errors;
-  req.session.errors = [];
-  let admin;
-  try {
-    admin = req.session.admin;
-  } catch (err) {
-    console.log(err);
-  }
-  let balance = 0;
-  balance = await client.balance(req.session.user);
-  let logsent;
-  console.log("start " + Date.now());
-  try {
-    const { user, password } = req.session;
-    logsent = await client.log(user, password);
-  } catch (e) {
-    console.log(e);
-  }
-  console.log(logsent);
-  let logrec = logsent;
-  let graphlog = logsent;
-  if (graphlog != null) {
-    graphlog = graphlog.reverse();
-  }
-  let graphdata = "";
-  let currentbal = balance;
-  if (graphlog) {
-    for (i = graphlog.length - 1; i > -1; i--) {
-      if (graphlog[i].from == req.session.user) {
-        currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
-        graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
-      } else {
-        currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
-        graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+fastify.get(
+  "/BankF",
+  {
+    preValidation: function (req, res, done) {
+      if (req.session.user != undefined) {
+        return done();
+      }
+      req.session.errors = [];
+      req.session.errors.push({ msg: "please login to view this resource" });
+      reply.redirect("/login");
+    },
+  },
+  async function (req, res) {
+    const client = new CCashClient(process.env.BANKAPIURL);
+    let successes = req.session.successes;
+    let errors = req.session.errors;
+    req.session.errors = [];
+    let admin;
+    try {
+      admin = req.session.admin;
+    } catch (err) {
+      console.log(err);
+    }
+    let balance = 0;
+    balance = await client.balance(req.session.user);
+    console.log(balance);
+    let logsent;
+    console.log("start " + Date.now());
+    try {
+      const { user, password } = req.session;
+      logsent = await client.log(user, password);
+    } catch (e) {
+      console.log(e);
+    }
+    console.log(logsent);
+    let logrec = logsent;
+    let graphlog = logsent;
+    if (graphlog != null) {
+      graphlog = graphlog.reverse();
+    }
+    let graphdata = "";
+    let currentbal = balance;
+    if (graphlog) {
+      for (i = graphlog.length - 1; i > -1; i--) {
+        if (graphlog[i].from == req.session.user) {
+          currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
+          graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+        } else {
+          currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
+          graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+        }
+      }
+    } else {
+      graphlog = undefined;
+    }
+    if (graphdata != "") {
+      graphdata =
+        ", [" + parseInt(graphlog.length) + "," + balance + "]" + graphdata;
+      graphdata = '["transaction", "balance"]' + graphdata;
+    }
+    if (logsent == null) {
+      logsent = undefined;
+    } else {
+      logsent = await logsent.filter(({ from }) => from === req.session.user);
+    }
+    if (logrec == null) {
+      logrec = undefined;
+    } else {
+      logrec = await logrec.filter(({ to }) => to === req.session.user);
+    }
+    if (logsent) {
+      for (i in logrec) {
+        logrec[i].time = new Date(logrec[i].time);
       }
     }
-  } else {
-    graphlog = undefined;
-  }
-  if (graphdata != "") {
-    graphdata =
-      ", [" + parseInt(graphlog.length) + "," + balance + "]" + graphdata;
-    graphdata = '["transaction", "balance"]' + graphdata;
-  }
-  if (logsent == null) {
-    logsent = undefined;
-  } else {
-    logsent = await logsent.filter(({ from }) => from === req.session.user);
-  }
-  if (logrec == null) {
-    logrec = undefined;
-  } else {
-    logrec = await logrec.filter(({ to }) => to === req.session.user);
-  }
-  if (logsent) {
-    for (i in logrec) {
-      logrec[i].time = new Date(logrec[i].time);
+    if (logrec) {
+      for (i in logsent) {
+        logsent[i].time = new Date(logsent[i].time);
+      }
     }
-  }
-  if (logrec) {
-    for (i in logsent) {
-      logsent[i].time = new Date(logsent[i].time);
+    if (logrec != null) {
+      logrec.reverse();
     }
+    if (logsent != null) {
+      logsent.reverse();
+    }
+    let maxgraph = balance + 1000;
+    console.log("begin render " + Date.now());
+    res.view("bankf", {
+      maxgraph: maxgraph,
+      graphdata: graphdata,
+      logrec: logrec,
+      logsent: logsent,
+      user: req.session.get("user"),
+      balance: balance,
+      admin: req.session.get("admin"),
+      sucesses: successes,
+      errors: errors,
+    });
   }
-  if (logrec != null) {
-    logrec.reverse();
-  }
-  if (logsent != null) {
-    logsent.reverse();
-  }
-  let maxgraph = balance + 1000;
-  console.log("begin render " + Date.now());
-  res.render("bankf", {
-    maxgraph: maxgraph,
-    graphdata: graphdata,
-    logrec: logrec,
-    logsent: logsent,
-    user: req.session.user,
-    balance: balance,
-    user: req.session.user,
-    admin: req.session.admin,
-    sucesses: successes,
-    errors: errors,
-    random: papy(),
-  });
-});
+);
 
-app.post("/sendfunds", async function (req, res) {
+fastify.post("/sendfunds", async function (req, res) {
   const client = new CCashClient(process.env.BANKAPIURL);
   let { amount, name, senderpass } = req.body;
   req.session.errors = [];
@@ -240,7 +226,7 @@ app.post("/sendfunds", async function (req, res) {
   }
 });
 
-app.post("/register", async function (req, res) {
+fastify.post("/register", async function (req, res) {
   const client = new CCashClient(process.env.BANKAPIURL);
   var { name, password, password2 } = req.body;
   req.session.errors = [];
@@ -269,12 +255,12 @@ app.post("/register", async function (req, res) {
   }
 });
 
-app.post("/login", async function (req, res) {
+fastify.post("/login", async function (req, res) {
   const client = new CCashClient(process.env.BANKAPIURL);
   if (req.session.user) {
     res.redirect("/");
   }
-  req.session.regenerate(function (err) {});
+  req.session.destroySession(function (err) {});
   const { name, password } = req.body;
   let adminTest;
   try {
@@ -306,24 +292,24 @@ app.post("/login", async function (req, res) {
 });
 
 let admin = require("./routes/admin");
-app.use("/admin", admin);
+fastify.all("/admin", admin);
 
 let settings = require("./routes/settings");
-app.use("/settings", settings);
+fastify.all("/settings", settings);
 
-app.get("/logout", function (req, res) {
-  req.session.regenerate(function (err) {
-    res.render("login", {
+fastify.get("/logout", function (req, res) {
+  req.destroySession(function (err) {
+    res.view("login", {
       random: papy(),
     });
   });
 });
 
-app.get("/login", function (req, res) {
+fastify.get("/login", function (req, res) {
   let successes = req.session.successes;
   let errors = req.session.errors;
-  req.session.regenerate(function (err) {
-    res.render("login", {
+  req.session.destroySession(function (err) {
+    res.view("login", {
       successes: successes,
       errors: errors,
       user: req.session.user,
@@ -332,12 +318,12 @@ app.get("/login", function (req, res) {
   });
 });
 
-app.get("/register", function (req, res) {
+fastify.get("/register", function (req, res) {
   let successes = req.session.successes;
   req.session.successes = [];
   let errors = req.session.errors;
   req.session.errors = [];
-  res.render("register", {
+  res.view("register", {
     errors: errors,
     successes: successes,
     user: req.session.user,
@@ -348,6 +334,11 @@ app.get("/register", function (req, res) {
 process.on("SIGINT", function () {
   process.exit();
 });
-app.listen(process.env.PORT || 3000, function () {
-  console.log("Server started on port 3000...");
+
+fastify.listen(process.env.PORT || 3000, function (err, address) {
+  if (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+  fastify.log.info(`server listening on ${address}`);
 });

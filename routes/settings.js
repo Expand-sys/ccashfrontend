@@ -56,7 +56,7 @@ router.post("/pass", ensureAuthenticated, async function (req, res) {
       });
       res.redirect("/settings");
     } else {
-      req.session.regenerate(function (err) {
+      req.destroySession(function (err) {
         req.session.successes = [];
         req.session.successes.push({
           msg: "Change Password Successful, Please Login Again",
