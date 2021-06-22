@@ -5,9 +5,9 @@ html
     link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css", integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z", crossorigin="anonymous")
     link(rel="preconnect" href="https://fonts.gstatic.com")
     link(href="https://fonts.googleapis.com/css2?family=Lato&family=Montserrat&display=swap" rel="stylesheet")
-    if random == true
+    if random
       link(rel='stylesheet' href='/css/papy.css')
-    if random == false || random == null
+    if !random
       link(rel='stylesheet' href='/css/style.css')
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
   body
@@ -38,13 +38,10 @@ html
                 li.nav-item
                   a.nav-link(href='/admin').text-white Admin
     .container
-      != messages('message', locals)
       if errors 
-        each error, i in errors
-          div(class="alert alert-danger") #{error.msg}  
+        div(class="alert alert-danger") #{errors}  
       if successes
-        each success, i in successes
-          div(class="alert alert-success") #{success.msg}  
+        div(class="alert alert-success") #{successes}  
     br
     br
     block content
