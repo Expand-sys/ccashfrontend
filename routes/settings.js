@@ -57,7 +57,7 @@ module.exports = function (fastify, opts, done) {
         res.redirect("/settings");
       } else {
         patch = await client.changePassword(
-          req.session.user,
+          req.session.get("user"),
           attempt,
           new_pass
         );
@@ -66,13 +66,12 @@ module.exports = function (fastify, opts, done) {
           req.session.set("errors", "Password Wrong");
           res.redirect("/settings");
         } else {
-          req.destroySession(function (err) {
-            req.session.set(
-              "successes",
-              "Change Password Successful, Please Login Again"
-            );
-            res.redirect("/login");
-          });
+          req.session.delete();
+          req.session.set(
+            "successes",
+            "Change Password Successful, Please Login Again"
+          );
+          res.redirect("/login");
         }
       }
     }

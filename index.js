@@ -306,8 +306,6 @@ fastify.get("/logout", function (req, res) {
   let successes = req.session.get("successes");
   let errors = req.session.get("errors");
   req.session.delete();
-
-  req.session.delete();
   res.view("login", {
     random: papy(),
     successes: successes,
