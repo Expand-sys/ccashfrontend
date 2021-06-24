@@ -205,7 +205,7 @@ fastify.get(
     console.log("begin render " + Date.now());
     res.view("bankf", {
       maxgraph: maxgraph,
-      graphdata: graphdata || null,
+      graphdata: graphdata,
       logrec: logrec,
       logsent: logsent,
       user: req.session.get("user"),
