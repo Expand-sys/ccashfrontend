@@ -1,13 +1,10 @@
 const root = process.env.PWD;
 const path = require("path");
 const pug = require("pug");
-const flash = require("connect-flash");
-const expressValidator = require("express-validator");
 const { postUser } = require(`${root}/helpers/functions.js`);
 const got = require("got");
 
 const fs = require("fs");
-const mongoose = require("mongoose");
 
 const { CCashClient } = require("ccash-client-js");
 
