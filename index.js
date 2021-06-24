@@ -126,28 +126,23 @@ fastify.get(
       console.log(err);
     }
     let balance = 0;
-    let graphdata = "";
-    let logsent = [];
-    let logrec = [];
-    if (admin != 1) {
+    const user = req.session.get("user");
+    const password = req.session.get("password");
+    if (admin == 1) {
+      res.redirect("admin");
+    } else {
       balance = await client.balance(req.session.get("user"));
       console.log(balance);
-      let logsent;
       console.log("start " + Date.now());
-      try {
-        const user = req.session.get("user");
-        const password = req.session.get("password");
-        logsent = await client.log(user, password);
-      } catch (e) {
-        console.log(e);
-      }
-      console.log(logsent);
-      logrec = logsent;
-      graphlog = logsent;
+
+      let logsent = await client.log(user, password);
+
+      let logrec = logsent;
+      let graphlog = logsent;
       if (graphlog != null) {
         graphlog = graphlog.reverse();
       }
-      graphdata = "";
+      let graphdata = "";
       let currentbal = balance;
       if (graphlog) {
         for (i = graphlog.length - 1; i > -1; i--) {
@@ -199,21 +194,22 @@ fastify.get(
       if (logsent != null) {
         logsent.reverse();
       }
+      console.log(logrec);
+      console.log(logsent);
+      let maxgraph = balance + 1000;
+      console.log("begin render " + Date.now());
+      res.view("bankf", {
+        maxgraph: maxgraph,
+        graphdata: graphdata,
+        logrec: logrec,
+        logsent: logsent,
+        user: req.session.get("user"),
+        balance: balance,
+        admin: req.session.get("admin"),
+        sucesses: successes,
+        errors: errors,
+      });
     }
-
-    let maxgraph = balance + 1000;
-    console.log("begin render " + Date.now());
-    res.view("bankf", {
-      maxgraph: maxgraph,
-      graphdata: graphdata,
-      logrec: logrec,
-      logsent: logsent,
-      user: req.session.get("user"),
-      balance: balance,
-      admin: req.session.get("admin"),
-      sucesses: successes,
-      errors: errors,
-    });
   }
 );
 
@@ -360,4 +356,5 @@ fastify.listen(process.env.PORT || 3000, "0.0.0.0", function (err, address) {
     process.exit(1);
   }
   fastify.log.info(`server listening on ${address}`);
+  console.log(`server running on ${address}`);
 });
