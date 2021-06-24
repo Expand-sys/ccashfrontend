@@ -1,8 +1,6 @@
 const root = process.env.PWD;
 const path = require("path");
 const pug = require("pug");
-const flash = require("connect-flash");
-const expressValidator = require("express-validator");
 const { postUser } = require(`${root}/helpers/functions.js`);
 const got = require("got");
 
