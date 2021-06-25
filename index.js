@@ -3,28 +3,22 @@ require("pino-pretty");
 const dotenv = require("dotenv");
 
 dotenv.config({ path: ".env" });
-if (process.env.SECURE) {
-  const fastify = require("fastify")({
-    http2: true,
-    https: {
-      allowHTTP1: true, // fallback support for HTTP1
-      key: fs.readFileSync(path.join(root, "..", "config", "key.key")),
-      cert: fs.readFileSync(path.join(root, "..", "config", "cert.cert")),
-    },
-  });
-} else {
-  const fastify = require("fastify")({
-    //logger: { prettyPrint: true },
-  });
-}
+const fs = require("fs");
+const path = require("path");
+const fastify = require("fastify")({
+  http2: true,
+  https: {
+    allowHTTP1: true, // fallback support for HTTP1
+    //key: fs.readFileSync(path.join(root, "..", "config", "key.key")),
+    //cert: fs.readFileSync(path.join(root, "..", "config", "cert.cert")),
+  },
+});
 
 const fastifyFlash = require("fastify-flash");
 
-const path = require("path");
 const got = require("got");
 const url = require("url");
 
-const fs = require("fs");
 const { CCashClient } = require("ccash-client-js");
 
 fastify.register(require("fastify-formbody"));
