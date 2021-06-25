@@ -9,8 +9,8 @@ const fastify = require("fastify")({
   http2: true,
   https: {
     allowHTTP1: true, // fallback support for HTTP1
-    //key: fs.readFileSync(path.join(root, "..", "config", "key.key")),
-    //cert: fs.readFileSync(path.join(root, "..", "config", "cert.cert")),
+    key: fs.readFileSync(path.join(root, "..", "config", "key.key")),
+    cert: fs.readFileSync(path.join(root, "..", "config", "cert.cert")),
   },
 });
 
