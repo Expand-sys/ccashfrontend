@@ -1,18 +1,32 @@
 const root = process.env.PWD;
 require("pino-pretty");
-const fastify = require("fastify")({
-  //logger: { prettyPrint: true },
-});
+const dotenv = require("dotenv");
+
+dotenv.config({ path: ".env" });
+if (process.env.SECURE) {
+  const fastify = require("fastify")({
+    http2: true,
+    https: {
+      allowHTTP1: true, // fallback support for HTTP1
+      key: fs.readFileSync(path.join(root, "..", "config", "key.key")),
+      cert: fs.readFileSync(path.join(root, "..", "config", "cert.cert")),
+    },
+  });
+} else {
+  const fastify = require("fastify")({
+    //logger: { prettyPrint: true },
+  });
+}
+
 const fastifyFlash = require("fastify-flash");
 
 const path = require("path");
 const got = require("got");
 const url = require("url");
-const dotenv = require("dotenv");
 
 const fs = require("fs");
 const { CCashClient } = require("ccash-client-js");
-dotenv.config({ path: ".env" });
+
 fastify.register(require("fastify-formbody"));
 fastify.register(require("fastify-static"), {
   root: path.join(__dirname, "public"),
