@@ -1,0 +1,141 @@
+
+:root {
+    --colourOne: #30292F;
+    --colourTwo: #413F54;
+    --colourThree: #3F3A82;
+    --colourFour: #5576B1;
+    --colourFive: #3F4045;
+    --backgroundColour: #8F7AC2;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI";
+    color: #FFFFFF;
+    background-color: var(--backgroundColour);
+    overflow-x: hidden;
+}
+
+a {
+    text-decoration: none;
+}
+
+.navbar {
+    position: sticky;
+    width: 100vw;
+    height: 5vh;
+    background-color: var(--colourThree);
+    padding: 1em;
+}
+
+.navelement {
+    position: relative;
+}
+
+.navelement#icon {
+    height: 300%;
+    background-color: var(--colourTwo);
+    border-radius: 50%;
+    border: var(--colourFive) solid;
+    margin-right: 5em;
+    left: 1em;
+}
+
+.navelement-button {
+    margin-right: 1.5em;
+    padding: 0.1em;
+    top: -3.45em;
+    display: inline-block;
+    position: relative;
+    font-size: 2em;
+    background-color: transparent;
+    padding-bottom: 0.25em;
+    border-radius: 0.4em;
+    border: transparent solid inset;
+    transition: 0.1s ease-in-out;
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.navelement-button:hover {
+    cursor: pointer;
+    background-color: var(--colourFour);
+}
+
+.navelement-status {
+    width: 30vw;
+    text-align: center;
+    margin-left: 5em;
+    margin-right: 7em;
+    padding: 0.1em;
+    top: -3.45em;
+    display: inline-block;
+    position: relative;
+    font-size: 2em;
+    background-color: #272;
+    padding-bottom: 0.3em;
+    border-radius: 0.4em;
+    border: transparent solid inset;
+    transition: 0.1s ease-in-out;
+}
+
+.bodytext {
+    margin-top: 10vh;
+    margin-bottom: 10vh;
+    margin-left: 15vw;
+    margin-right: 15vw;
+    color: var(--colourOne);
+}
+
+.defineborderleft {
+    z-index: -99;
+    position: absolute;
+    height: 100vh;
+    background-color: var(--colourOne);
+    width: 8.4vw;
+    left: 0;
+    top: 0em;
+}
+
+.defineborderright {
+    z-index: -99;
+    position: absolute;
+    height: 100vh;
+    background-color: var(--colourOne);
+    width: 8.4vw;
+    right: 0;
+    top: 0em;
+}
+
+h1 {
+    font-size: 3em;
+}
+
+h2 {
+    margin-left: 1vw;
+    font-size: 2em;
+}
+
+h3 {
+    margin-left: 2vw;
+    font-size: 1.5em;
+}
+
+h4 {
+    margin-left: 3vw;
+    font-size: 1.2em;
+}
+
+text {
+    position: relative;
+    margin-left: 2vw;
+    font-size: 1.3em;
+}
+
+.aboutelementlink {
+    color: #339;
+    font-size: 1.3em;
+    margin-left: 2vw;
+    position: relative;
+}
