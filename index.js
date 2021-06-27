@@ -316,6 +316,7 @@ fastify.get("/logout", function (req, res) {
 });
 
 fastify.get("/login", async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let successes = req.session.get("successes");
   req.session.set("successes", "");
   let errors = req.session.get("errors");
@@ -336,6 +337,7 @@ fastify.get("/login", async function (req, res) {
 });
 
 fastify.get("/register", async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
   let successes = req.session.get("successes");
   req.session.set("successes", "");
   let errors = req.session.get("errors");

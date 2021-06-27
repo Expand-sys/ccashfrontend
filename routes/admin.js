@@ -16,6 +16,7 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
+      const client = new CCashClient(process.env.BANKAPIURL);
       let checkalive = await client.ping();
       if (checkalive) {
         alive = true;
