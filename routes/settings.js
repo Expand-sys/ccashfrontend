@@ -18,7 +18,13 @@ module.exports = function (fastify, opts, done) {
     {
       preValidation: [validate],
     },
-    function (req, res) {
+    async function (req, res) {
+      let checkalive = await client.ping();
+      if (checkalive) {
+        alive = true;
+      } else {
+        alive = false;
+      }
       let successes = req.session.get("successes");
       req.session.set("successes", "");
       let errors = req.session.get("errors");
@@ -28,6 +34,7 @@ module.exports = function (fastify, opts, done) {
         successes: successes,
         user: req.session.get("user"),
         admin: req.session.get("admin"),
+        alive: true,
       });
     }
   );

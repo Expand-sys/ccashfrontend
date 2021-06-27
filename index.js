@@ -3,20 +3,7 @@ require("pino-pretty");
 const dotenv = require("dotenv");
 
 dotenv.config({ path: ".env" });
-if (process.env.SECURE) {
-  const fastify = require("fastify")({
-    http2: true,
-    https: {
-      allowHTTP1: true, // fallback support for HTTP1
-      key: fs.readFileSync(path.join(root, "..", "config", "key.key")),
-      cert: fs.readFileSync(path.join(root, "..", "config", "cert.cert")),
-    },
-  });
-} else {
-  const fastify = require("fastify")({
-    //logger: { prettyPrint: true },
-  });
-}
+const fastify = require("fastify")();
 
 const fastifyFlash = require("fastify-flash");
 
@@ -99,19 +86,11 @@ fastify.get("/", async function (req, res) {
     res.view("setup");
   } else {
     const client = new CCashClient(process.env.BANKAPIURL);
-    let checkalive;
-    try {
-      checkalive = await client.ping();
-    } catch (err) {
-      console.log(err);
-    }
-    let alive = false;
-    try {
-      if (checkalive) {
-        alive = true;
-      }
-    } catch (err) {
-      console.log(err);
+    let checkalive = await client.ping();
+    if (checkalive) {
+      alive = true;
+    } else {
+      alive = false;
     }
 
     res.view("index", {
@@ -222,6 +201,7 @@ fastify.get(
         admin: req.session.get("admin"),
         sucesses: successes,
         errors: errors,
+        alive: true,
       });
     }
   }
@@ -287,6 +267,7 @@ fastify.post("/register", async function (req, res) {
 
 fastify.post("/login", async function (req, res) {
   const client = new CCashClient(process.env.BANKAPIURL);
+
   if (req.session.get("user")) {
     res.redirect("/");
   }
@@ -334,30 +315,44 @@ fastify.get("/logout", function (req, res) {
   });
 });
 
-fastify.get("/login", function (req, res) {
+fastify.get("/login", async function (req, res) {
   let successes = req.session.get("successes");
   req.session.set("successes", "");
   let errors = req.session.get("errors");
   req.session.set("errors", "");
+  let checkalive = await client.ping();
+  if (checkalive) {
+    alive = true;
+  } else {
+    alive = false;
+  }
   res.view("login", {
     successes: successes,
     errors: errors,
     user: req.session.get("user"),
     random: papy(),
+    alive: alive,
   });
 });
 
-fastify.get("/register", function (req, res) {
+fastify.get("/register", async function (req, res) {
   let successes = req.session.get("successes");
   req.session.set("successes", "");
   let errors = req.session.get("errors");
   req.session.set("errors", "");
+  let checkalive = await client.ping();
+  if (checkalive) {
+    alive = true;
+  } else {
+    alive = false;
+  }
   res.view("register", {
     successes: successes,
     errors: errors,
     user: req.session.get("user"),
     admin: req.session.get("admin"),
     random: papy(),
+    alive: alive,
   });
 });
 process.on("SIGINT", function () {
