@@ -43,6 +43,7 @@ html
                 li.nav-item
                   a.nav-link(href='/admin').text-white Admin
     .container
+      .container(style="min-height: 3vh")
       if errors 
         div(class="alert alert-danger") #{errors}  
       if successes
