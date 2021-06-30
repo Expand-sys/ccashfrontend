@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 
 dotenv.config({ path: ".env" });
 const fastify = require("fastify")({
-  logger: true,
+  logger: false,
 });
 
 const fastifyFlash = require("fastify-flash");
@@ -30,8 +30,8 @@ fastify.register(require("fastify-secure-session"), {
   cookie: {
     path: "/",
     // options for setCookie, see https://github.com/fastify/fastify-cookie
-    secure: false,
-    httpOnly: false,
+    secure: true,
+    httpOnly: true,
     overwrite: true,
   },
 });
