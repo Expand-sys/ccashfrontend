@@ -3,7 +3,9 @@ require("pino-pretty");
 const dotenv = require("dotenv");
 
 dotenv.config({ path: ".env" });
-const fastify = require("fastify")();
+const fastify = require("fastify")({
+  logger: true,
+});
 
 const fastifyFlash = require("fastify-flash");
 
@@ -29,7 +31,7 @@ fastify.register(require("fastify-secure-session"), {
     path: "/",
     // options for setCookie, see https://github.com/fastify/fastify-cookie
     secure: false,
-    httpOnly: true,
+    httpOnly: false,
     overwrite: true,
   },
 });
@@ -53,10 +55,10 @@ function papy() {
   return random;
 }
 function validate(req, res, next) {
-  if (!req.session.get("user")) {
-    res.redirect("/login");
-  } else {
+  if (req.session.get("user")) {
     next();
+  } else {
+    res.redirect("/login");
   }
 }
 fastify.post("/setup", async function (req, res) {
@@ -122,7 +124,16 @@ fastify.get(
     const user = req.session.get("user");
     const password = req.session.get("password");
     if (admin == 1) {
-      res.redirect("admin");
+      console.log("punching sand");
+      balance = await client.balance(req.session.get("user"));
+      res.view("bankf", {
+        user: req.session.get("user"),
+        balance: balance,
+        admin: req.session.get("admin"),
+        sucesses: successes,
+        errors: errors,
+        alive: true,
+      });
     } else {
       balance = await client.balance(req.session.get("user"));
       console.log(balance);
@@ -304,7 +315,14 @@ fastify.register(require("./routes/admin"), { prefix: "/admin" });
 
 fastify.register(require("./routes/settings"), { prefix: "/settings" });
 
-fastify.get("/logout", function (req, res) {
+fastify.get("/logout", async function (req, res) {
+  const client = new CCashClient(process.env.BANKAPIURL);
+  let checkalive = await client.ping();
+  if (checkalive) {
+    alive = true;
+  } else {
+    alive = false;
+  }
   let successes = req.session.get("successes");
   let errors = req.session.get("errors");
   req.session.delete();
@@ -312,6 +330,7 @@ fastify.get("/logout", function (req, res) {
     random: papy(),
     successes: successes,
     errors: errors,
+    alive: alive,
   });
 });
 
