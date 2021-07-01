@@ -267,11 +267,8 @@ fastify.post("/login", async function (req, res) {
   }
   const { name, password } = req.body;
   let adminTest;
-  let verified;
-
   try {
     adminTest = await client.adminVerifyPassword(password);
-    verified = await client.verifyPassword(name, password);
   } catch (err) {
     console.log(err);
   }
@@ -283,6 +280,8 @@ fastify.post("/login", async function (req, res) {
     req.session.set("password", password);
     res.redirect("/BankF");
   } else {
+    let verified;
+    verified = await client.verifyPassword(name, password);
     console.log(verified);
     if (verified == 1) {
       req.session.set("user", name);
