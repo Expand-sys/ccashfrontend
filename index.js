@@ -123,98 +123,81 @@ fastify.get(
     let balance = 0;
     const user = req.session.get("user");
     const password = req.session.get("password");
-    if (admin == 1) {
-      console.log("punching sand");
-      balance = await client.balance(req.session.get("user"));
-      res.view("bankf", {
-        user: req.session.get("user"),
-        balance: balance,
-        admin: req.session.get("admin"),
-        sucesses: successes,
-        errors: errors,
-        alive: true,
-      });
-    } else {
-      balance = await client.balance(req.session.get("user"));
-      console.log(balance);
-      console.log("start " + Date.now());
+    balance = await client.balance(req.session.get("user"));
+    console.log(balance);
+    console.log("start " + Date.now());
 
-      let logsent = await client.log(user, password);
+    let logsent = await client.log(user, password);
 
-      let logrec = logsent;
-      let graphlog = logsent;
-      if (graphlog != null) {
-        graphlog = graphlog.reverse();
-      }
-      let graphdata = "";
-      let currentbal = balance;
-      if (graphlog) {
-        for (i = graphlog.length - 1; i > -1; i--) {
-          if (graphlog[i].from == req.session.get("user")) {
-            currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
-            graphdata =
-              graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
-          } else {
-            currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
-            graphdata =
-              graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
-          }
-        }
-      } else {
-        graphlog = undefined;
-      }
-      if (graphdata != "") {
-        graphdata =
-          ", [" + parseInt(graphlog.length) + "," + balance + "]" + graphdata;
-        graphdata = '["transaction", "balance"]' + graphdata;
-      }
-      if (logsent == null) {
-        logsent = undefined;
-      } else {
-        logsent = await logsent.filter(
-          ({ from }) => from === req.session.get("user")
-        );
-      }
-      if (logrec == null) {
-        logrec = undefined;
-      } else {
-        logrec = await logrec.filter(
-          ({ to }) => to === req.session.get("user")
-        );
-      }
-      if (logsent) {
-        for (i in logrec) {
-          logrec[i].time = new Date(logrec[i].time);
-        }
-      }
-      if (logrec) {
-        for (i in logsent) {
-          logsent[i].time = new Date(logsent[i].time);
-        }
-      }
-      if (logrec != null) {
-        logrec.reverse();
-      }
-      if (logsent != null) {
-        logsent.reverse();
-      }
-      console.log(logrec);
-      console.log(logsent);
-      let maxgraph = balance + 1000;
-      console.log("begin render " + Date.now());
-      res.view("bankf", {
-        maxgraph: maxgraph,
-        graphdata: graphdata,
-        logrec: logrec,
-        logsent: logsent,
-        user: req.session.get("user"),
-        balance: balance,
-        admin: req.session.get("admin"),
-        sucesses: successes,
-        errors: errors,
-        alive: true,
-      });
+    let logrec = logsent;
+    let graphlog = logsent;
+    if (graphlog != null) {
+      graphlog = graphlog.reverse();
     }
+    let graphdata = "";
+    let currentbal = balance;
+    if (graphlog) {
+      for (i = graphlog.length - 1; i > -1; i--) {
+        if (graphlog[i].from == req.session.get("user")) {
+          currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
+          graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+        } else {
+          currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
+          graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
+        }
+      }
+    } else {
+      graphlog = undefined;
+    }
+    if (graphdata != "") {
+      graphdata =
+        ", [" + parseInt(graphlog.length) + "," + balance + "]" + graphdata;
+      graphdata = '["transaction", "balance"]' + graphdata;
+    }
+    if (logsent == null) {
+      logsent = undefined;
+    } else {
+      logsent = await logsent.filter(
+        ({ from }) => from === req.session.get("user")
+      );
+    }
+    if (logrec == null) {
+      logrec = undefined;
+    } else {
+      logrec = await logrec.filter(({ to }) => to === req.session.get("user"));
+    }
+    if (logsent) {
+      for (i in logrec) {
+        logrec[i].time = new Date(logrec[i].time);
+      }
+    }
+    if (logrec) {
+      for (i in logsent) {
+        logsent[i].time = new Date(logsent[i].time);
+      }
+    }
+    if (logrec != null) {
+      logrec.reverse();
+    }
+    if (logsent != null) {
+      logsent.reverse();
+    }
+    console.log(logrec);
+    console.log(logsent);
+    let maxgraph = balance + 1000;
+    console.log("begin render " + Date.now());
+    res.view("bankf", {
+      maxgraph: maxgraph,
+      graphdata: graphdata,
+      logrec: logrec,
+      logsent: logsent,
+      user: req.session.get("user"),
+      balance: balance,
+      admin: req.session.get("admin"),
+      sucesses: successes,
+      errors: errors,
+      alive: true,
+    });
   }
 );
 
@@ -284,8 +267,11 @@ fastify.post("/login", async function (req, res) {
   }
   const { name, password } = req.body;
   let adminTest;
+  let verified;
+
   try {
     adminTest = await client.adminVerifyPassword(password);
+    verified = await client.verifyPassword(name, password);
   } catch (err) {
     console.log(err);
   }
@@ -297,8 +283,6 @@ fastify.post("/login", async function (req, res) {
     req.session.set("password", password);
     res.redirect("/BankF");
   } else {
-    let verified;
-    verified = await client.verifyPassword(name, password);
     console.log(verified);
     if (verified == 1) {
       req.session.set("user", name);
