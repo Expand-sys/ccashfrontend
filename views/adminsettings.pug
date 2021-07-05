@@ -25,6 +25,21 @@ block content
           br
           input.btn.btn-primary(type='submit',value='Submit')
       br
+        
+      .card.shadow
+        h4 Change password
+        form(method='POST', action='/admin/admpass')
+          #form-group
+            label Name:
+            input.form-control(name='name', type='name')
+            
+            label New Password:
+            input.form-control(name='new_pass',type='password')
+            label Confirm:
+            input.form-control(name='password2',type='password')
+          br
+          input.btn.btn-primary(type='submit',value='Submit')
+      br
       .card.shadow-lg
         h4 Check User Balance 
         form(method='POST', action='/admin/baluser')
@@ -35,12 +50,34 @@ block content
           input.btn.btn-primary(type='submit',value='Submit')
       br
       .card.shadow-lg
-        h4 Change Balance of User
-        form(method='POST', action='/admin/bal')
+        h4 Set Balance of User
+        form(method='POST', action='/admin/setbal')
           #form-group
             label Username:
             input.form-control(name='name', type='name')
             label Set balance to:
+            input.form-control(name='amount', type='number')
+          br
+          input.btn.btn-primary(type='submit',value='Submit')
+      br
+      .card.shadow-lg
+        h4 Add Balance to User
+        form(method='POST', action='/admin/addbal')
+          #form-group
+            label Username:
+            input.form-control(name='name', type='name')
+            label Add amount:
+            input.form-control(name='amount', type='number')
+          br
+          input.btn.btn-primary(type='submit',value='Submit')
+      br
+      .card.shadow-lg
+        h4 Subtract Balance from User
+        form(method='POST', action='/admin/subbal')
+          #form-group
+            label Username:
+            input.form-control(name='name', type='name')
+            label Subtract amount:
             input.form-control(name='amount', type='number')
           br
           input.btn.btn-primary(type='submit',value='Submit')

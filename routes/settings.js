@@ -19,8 +19,13 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
-      const client = new CCashClient(process.env.BANKAPIURL);
-      let checkalive = await client.ping();
+      //const client = new CCashClient(process.env.BANKAPIURL);
+      //let checkalive = await client.ping();
+      let checkalive = await got(`${api}/ping`, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
       if (checkalive) {
         alive = true;
       } else {
@@ -46,7 +51,7 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
-      const client = new CCashClient(process.env.BANKAPIURL);
+      //const client = new CCashClient(process.env.BANKAPIURL);
       let { attempt, new_pass, password2 } = req.body;
       let patch;
       if (attempt == undefined) {
@@ -61,11 +66,20 @@ module.exports = function (fastify, opts, done) {
         req.session.set("errors", "Password must be at least 6 characters");
         res.redirect("/settings");
       } else {
-        patch = await client.changePassword(
+        /*patch = await client.changePassword(
           req.session.get("user"),
           attempt,
           new_pass
-        );
+        );*/
+        patch = await got.patch(`${api}/user/change_password`, {
+          headers: {
+            Authorization: auth,
+            Accept: "application/json",
+          },
+          json: {
+            new_pass: new_pass,
+          },
+        });
         console.log(patch);
         if (patch == -2) {
           req.session.set("errors", "Password Wrong");
@@ -88,17 +102,26 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
-      const client = new CCashClient(process.env.BANKAPIURL);
+      //  const client = new CCashClient(process.env.BANKAPIURL);
       let { password, password2 } = req.body;
       let del;
       if (!password || !password2) {
         req.session.set("errors", "please fill in all fields");
         res.redirect("/settings");
-      } else if (password != password2) {
+      } else if (
+        password != password2 &&
+        password != req.session.get("password")
+      ) {
         req.session.set("errors", "Passwords don't match");
         res.redirect("/settings");
       } else {
-        del = await client.deleteUser(req.session.user, password);
+        //del = await client.deleteUser(req.session.user, password);
+        del = await got.delete(`${api}/delete`, {
+          headers: {
+            Authorization: auth,
+            Accept: "application/json",
+          },
+        });
         console.log(del);
         if (del == -2) {
           req.session.set("errors", "Password Wrong");
