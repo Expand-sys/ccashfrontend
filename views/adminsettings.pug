@@ -61,23 +61,12 @@ block content
           input.btn.btn-primary(type='submit',value='Submit')
       br
       .card.shadow-lg
-        h4 Add Balance to User
-        form(method='POST', action='/admin/addbal')
+        h4 Impact Balance of User +/-
+        form(method='POST', action='/admin/impbal')
           #form-group
             label Username:
             input.form-control(name='name', type='name')
-            label Add amount:
-            input.form-control(name='amount', type='number')
-          br
-          input.btn.btn-primary(type='submit',value='Submit')
-      br
-      .card.shadow-lg
-        h4 Subtract Balance from User
-        form(method='POST', action='/admin/subbal')
-          #form-group
-            label Username:
-            input.form-control(name='name', type='name')
-            label Subtract amount:
+            label Amount:
             input.form-control(name='amount', type='number')
           br
           input.btn.btn-primary(type='submit',value='Submit')

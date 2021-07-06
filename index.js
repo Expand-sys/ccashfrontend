@@ -86,12 +86,16 @@ fastify.post("/setup", async function (req, res) {
 });
 
 fastify.get("/", async function (req, res) {
+  let successes = req.session.get("successes");
+  req.session.set("successes", "");
+  let errors = req.session.get("errors");
+  req.session.set("errors", "");
   if (process.env.SETUP == false || !process.env.SETUP) {
     res.view("setup");
   } else {
     //const client = new CCashClient(process.env.BANKAPIURL);
     //let checkalive = await client.ping();
-    let checkalive = await got(`${api}/ping`, {
+    let checkalive = await got(`${api}/help`, {
       headers: {
         Accept: "application/json",
       },
@@ -107,6 +111,8 @@ fastify.get("/", async function (req, res) {
       admin: req.session.get("admin"),
       alive: alive,
       url: process.env.BANKAPIURL,
+      errors: errors,
+      successes: successes,
     });
   }
 });
@@ -137,7 +143,7 @@ fastify.get(
         Authorization: auth,
         Accept: "application/json",
       },
-      query: {
+      searchParams: {
         name: user,
       },
     });
@@ -238,28 +244,26 @@ fastify.post(
     req.session.set("successes", "");
     let result;
     //result = await client.sendFunds(a_name, senderpass, name, amount);
-    result = await got.post(`${api}/user/transfer`, {
-      headers: {
-        Authorization: auth,
-        Accept: "application/json",
-      },
-      json: {
-        to: name,
-        amount: amount,
-      },
-    });
-    console.log(result);
-    if (result == 1) {
+    try {
+      result = await got.post(`${api}/user/transfer`, {
+        headers: {
+          Authorization: auth,
+          Accept: "application/json",
+        },
+        json: {
+          to: name,
+          amount: amount,
+        },
+      });
+    } catch (e) {
+      req.session.set("errors", `${e.response.body}`);
+      console.log(e.response.body);
+    }
+    if (result) {
       req.session.set("successes", "Transfer successful");
       //post details
-      res.redirect("/BankF");
-    } else if (result == -1) {
-      req.session.set("errors", "Transfer Unsuccessful: User not Found");
-      res.redirect("/BankF");
-    } else if (result == -2) {
-      req.session.set("errors", "Transfer Unsuccessful: Wrong Password");
-      res.redirect("/BankF");
     }
+    res.redirect("/BankF");
   }
 );
 
@@ -279,26 +283,26 @@ fastify.post("/register", async function (req, res) {
     res.redirect("/register");
   } else {
     //let checkuser = await client.addUser(name, password);
-    let checkuser = await got.post(`${api}/user/register`, {
-      headers: {
-        Accept: "application/json",
-      },
-      json: {
-        name: `${name}`,
-        pass: `${password}`,
-      },
-    });
-    console.log(await checkuser);
-    if (checkuser == -4) {
-      req.session.set("errors", "Error: Name too long");
-      res.redirect("/register");
-    } else if (checkuser == -5) {
-      req.session.set("errors", "Error: User Already Exists");
-      res.redirect("/register");
-    } else {
-      req.session.set("successes", "Account Created! please Log in");
-      res.redirect("/login");
+    try {
+      let checkuser = await got.post(`${api}/user/register`, {
+        headers: {
+          Accept: "application/json",
+        },
+        json: {
+          name: `${name}`,
+          pass: `${password}`,
+        },
+      });
+    } catch (e) {
+      req.session.set("errors", `${e.response.body}`);
+      console.log(e.response.body);
     }
+
+    console.log(await checkuser);
+    if (checkuser) {
+      req.session.set("successes", "Account Created! please Log in");
+    }
+    res.redirect("/login");
   }
 });
 
@@ -309,7 +313,7 @@ fastify.post("/login", async function (req, res) {
     res.redirect("/");
   }
   const { name, password } = req.body;
-  let adminTest;
+
   /*try {
     adminTest = await client.adminVerifyPassword(password);
   } catch (err) {
@@ -318,6 +322,7 @@ fastify.post("/login", async function (req, res) {
   let auth = btoa(`${name}:${password}`);
   auth = `Basic ${auth}`;
   console.log(auth);
+  let adminTest;
   try {
     adminTest = await got.post(`${api}/admin/verify_account`, {
       headers: {
@@ -325,37 +330,37 @@ fastify.post("/login", async function (req, res) {
         Accept: "application/json",
       },
     });
+    adminTest = JSON.parse(adminTest.body);
   } catch (e) {
-    console.log(e);
+    console.log(e.response.body);
   }
-  adminTest = JSON.parse(adminTest.body);
   console.log(adminTest);
-  if (adminTest != -2) {
+  if (adminTest) {
     req.session.set("b64", auth);
     req.session.set("admin", adminTest);
     req.session.set("user", name);
     req.session.set("password", password);
-    res.redirect("/BankF");
   } else {
     let verified;
     //verified = await client.verifyPassword(name, password);
-    verified = await got.post(`${api}/user/verify_password`, {
-      headers: {
-        Authorization: auth,
-        Accept: "application/json",
-      },
-    });
-    console.log(verified);
-    if (verified == 1) {
+    try {
+      verified = await got.post(`${api}/user/verify_password`, {
+        headers: {
+          Authorization: auth,
+          Accept: "application/json",
+        },
+      });
+    } catch (e) {
+      req.session.set("errors", `${e.response.body}`);
+      console.log(e.response.body);
+    }
+    if (verified) {
       req.session.set("b64", auth);
       req.session.set("user", name);
       req.session.set("password", password);
-      res.redirect("/BankF");
-    } else {
-      req.session.set("errors", ["Password wrong"]);
-      res.redirect("/login");
     }
   }
+  res.redirect("/BankF");
 });
 
 fastify.register(require("./routes/admin"), { prefix: "/admin" });
@@ -365,7 +370,7 @@ fastify.register(require("./routes/settings"), { prefix: "/settings" });
 fastify.get("/logout", async function (req, res) {
   //const client = new CCashClient(process.env.BANKAPIURL);
   //let checkalive = await client.ping();
-  let checkalive = await got(`${api}/ping`, {
+  let checkalive = await got(`${api}/help`, {
     headers: {
       Accept: "application/json",
     },
@@ -393,7 +398,7 @@ fastify.get("/login", async function (req, res) {
   let errors = req.session.get("errors");
   req.session.set("errors", "");
   //let checkalive = await client.ping();
-  let checkalive = await got(`${api}/ping`, {
+  let checkalive = await got(`${api}/help`, {
     headers: {
       Accept: "application/json",
     },
@@ -419,7 +424,7 @@ fastify.get("/register", async function (req, res) {
   let errors = req.session.get("errors");
   req.session.set("errors", "");
   //let checkalive = await client.ping();
-  let checkalive = await got(`${api}/ping`, {
+  let checkalive = await got(`${api}/help`, {
     headers: {
       Accept: "application/json",
     },

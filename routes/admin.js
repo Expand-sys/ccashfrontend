@@ -18,7 +18,7 @@ module.exports = function (fastify, opts, done) {
     async function (req, res) {
       //const client = new CCashClient(process.env.BANKAPIURL);
       //let checkalive = await client.ping();
-      let checkalive = await got(`${api}/ping`, {
+      let checkalive = await got(`${api}/help`, {
         headers: {
           Accept: "application/json",
         },
@@ -55,8 +55,6 @@ module.exports = function (fastify, opts, done) {
         req.session.set("errors", "please fill in all fields");
       } else if (init_pass !== password2) {
         req.session.set("errors", "Passwords don't match");
-      } else if (init_pass.length < 6) {
-        req.session.set("errors", "Password must be at least 6 characters");
       }
       /*let post = await client.adminAddUser(
         name,
@@ -64,27 +62,26 @@ module.exports = function (fastify, opts, done) {
         init_pass,
         parseInt(init_bal)
       );*/
-
-      let post = await got.post(`${api}/admin/user/register`, {
-        headers: {
-          Authorization: req.session.get("b64"),
-          Accept: "application/json",
-        },
-        json: {
-          name: name,
-          balance: parseInt(init_bal),
-          pass: init_pass,
-        },
-      });
-      console.log(post.body);
-      if (post == -3) {
-        req.session.set("errors", "Invalid Request");
-      } else if (post == -4) {
-        req.session.set("errors", "Name too long");
-      } else if (post == -5) {
-        req.session.set("errors", "User already exists");
-      } else {
-        req.session.set("successes", "Account Creation Successful");
+      let post;
+      try {
+        post = await got.post(`${api}/admin/user/register`, {
+          headers: {
+            Authorization: req.session.get("b64"),
+            Accept: "application/json",
+          },
+          json: {
+            name: name,
+            balance: parseInt(init_bal),
+            pass: init_pass,
+          },
+        });
+        post = post.body;
+      } catch (e) {
+        req.session.set("errors", `${e.response.body}`);
+        console.log(e.response.body);
+      }
+      if (post) {
+        req.session.set("successes", `User ${name} registered.`);
       }
       res.redirect("/admin");
     }
@@ -102,23 +99,28 @@ module.exports = function (fastify, opts, done) {
       req.session.set("successes", "");
       req.session.set("errors", "");
       //balance = await client.balance(name);
-      balance = await got(`${api}/user/balance`, {
-        headers: {
-          Authorization: req.session.get("b64"),
-          Accept: "application/json",
-        },
-        query: {
-          name: name,
-        },
-      });
-      balance = parseInt(balance.body);
+      let responsecode;
+      try {
+        balance = await got(`${api}/user/balance`, {
+          headers: {
+            Authorization: req.session.get("b64"),
+            Accept: "application/json",
+          },
+          searchParams: {
+            name: name,
+          },
+        });
+        balance = parseInt(balance.body);
+      } catch (e) {
+        req.session.set("errors", `${e.response.body}`);
+        console.log(e.response.body);
+      }
+
       console.log(balance);
-      if (balance < 0) {
-        req.session.set("errors", "User not found");
-      } else {
+      if (balance) {
         req.session.set(
           "successes",
-          "User: " + name + " has " + balance + " monies"
+          "User: " + name + " has " + balance + " truckstop shitter simoleons"
         );
       }
       res.redirect("/admin");
@@ -127,76 +129,6 @@ module.exports = function (fastify, opts, done) {
 
   fastify.post(
     "/setbal",
-    {
-      preValidation: [validateAdmin],
-    },
-    async function (req, res) {
-      const client = new CCashClient(process.env.BANKAPIURL);
-      let { name, amount } = req.body;
-      let patch;
-      req.session.successes = [];
-      req.session.errors = [];
-      /*patch = await client.setBalance(
-        name,
-        req.session.get("adminp"),
-        parseInt(amount)
-      );*/
-      patch = await got.patch(`${api}/admin/set_balance`, {
-        headers: {
-          Authorization: req.session.get("b64"),
-          Accept: "application/json",
-        },
-        json: {
-          name: name,
-          amount: parseInt(amount),
-        },
-      });
-      console.log(patch);
-      if (patch == -1) {
-        req.session.set("errors", "User not Found");
-      } else if (patch == 1) {
-        req.session.set("successes", "Change Funds Successful");
-      }
-      res.redirect("/admin");
-    }
-  );
-  fastify.post(
-    "/subbal",
-    {
-      preValidation: [validateAdmin],
-    },
-    async function (req, res) {
-      const client = new CCashClient(process.env.BANKAPIURL);
-      let { name, amount } = req.body;
-      let patch;
-      req.session.successes = [];
-      req.session.errors = [];
-      /*patch = await client.setBalance(
-        name,
-        req.session.get("adminp"),
-        parseInt(amount)
-      );*/
-      patch = await got.post(`${api}/admin/sub_balance`, {
-        headers: {
-          Authorization: req.session.get("b64"),
-          Accept: "application/json",
-        },
-        json: {
-          name: name,
-          amount: parseInt(amount),
-        },
-      });
-      console.log(patch);
-      if (patch == -1) {
-        req.session.set("errors", "User not Found");
-      } else if (patch == 1) {
-        req.session.set("successes", "Change Funds Successful");
-      }
-      res.redirect("/admin");
-    }
-  );
-  fastify.post(
-    "/addbal",
     {
       preValidation: [validateAdmin],
     },
@@ -211,20 +143,63 @@ module.exports = function (fastify, opts, done) {
         req.session.get("adminp"),
         parseInt(amount)
       );*/
-      patch = await got.post(`${api}/admin/add_balance`, {
-        headers: {
-          Authorization: req.session.get("b64"),
-          Accept: "application/json",
-        },
-        json: {
-          name: name,
-          amount: parseInt(amount),
-        },
-      });
+      try {
+        patch = await got.patch(`${api}/admin/set_balance`, {
+          headers: {
+            Authorization: req.session.get("b64"),
+            Accept: "application/json",
+          },
+          json: {
+            name: name,
+            amount: parseInt(amount),
+          },
+        });
+        patch = patch.body;
+      } catch (e) {
+        req.session.set("errors", `${e.response.body}`);
+        console.log(e.response.body);
+      }
+
       console.log(patch);
-      if (patch == -1) {
-        req.session.set("errors", "User not Found");
-      } else if (patch == 1) {
+      if (patch) {
+        req.session.set("successes", "Change Funds Successful");
+      }
+      res.redirect("/admin");
+    }
+  );
+  fastify.post(
+    "/impbal",
+    {
+      preValidation: [validateAdmin],
+    },
+    async function (req, res) {
+      //const client = new CCashClient(process.env.BANKAPIURL);
+      let { name, amount } = req.body;
+      let patch;
+      req.session.successes = [];
+      req.session.errors = [];
+      /*patch = await client.setBalance(
+        name,
+        req.session.get("adminp"),
+        parseInt(amount)
+      );*/
+
+      try {
+        patch = await got.post(`${api}/admin/impact_balance`, {
+          headers: {
+            Authorization: req.session.get("b64"),
+            Accept: "application/json",
+          },
+          json: {
+            name: name,
+            amount: parseInt(amount),
+          },
+        });
+      } catch (e) {
+        req.session.set("errors", `${e.response.body}`);
+        console.log(e.response.body);
+      }
+      if (patch) {
         req.session.set("successes", "Change Funds Successful");
       }
       res.redirect("/admin");
@@ -240,43 +215,35 @@ module.exports = function (fastify, opts, done) {
       //const client = new CCashClient(process.env.BANKAPIURL);
       let { name, new_pass, password2 } = req.body;
       let patch;
-      if (!new_pass || !password2) {
-        req.session.set("errors", "please fill in all fields");
-        res.redirect("/settings");
-      } else if (new_pass != password2) {
-        req.session.set("errors", "Passwords don't match");
-        res.redirect("/settings");
-      } else if (new_pass.length < 6) {
-        req.session.set("errors", "Password must be at least 6 characters");
-        res.redirect("/settings");
-      } else {
-        /*patch = await client.changePassword(
+      /*patch = await client.changePassword(
           req.session.get("user"),
           attempt,
           new_pass
         );*/
-        patch = await got.patch(`${api}/user/change_password`, {
-          headers: {
-            Authorization: req.session.get("b64"),
-            Accept: "application/json",
-          },
-          json: {
-            name: name,
-            new_pass: new_pass,
-          },
-        });
-        console.log(patch);
-        if (patch == -2) {
-          req.session.set("errors", "Password Wrong");
-          res.redirect("/");
-        } else {
-          req.session.set(
-            "successes",
-            "Change Password Successful, Please Login Again"
-          );
-          res.redirect("/");
+      if (new_pass == password2) {
+        try {
+          patch = await got.patch(`${api}/user/change_password`, {
+            headers: {
+              Authorization: req.session.get("b64"),
+              Accept: "application/json",
+            },
+            json: {
+              name: name,
+              new_pass: new_pass,
+            },
+          });
+        } catch (e) {
+          req.session.set("errors", `${e.response.body}`);
+          console.log(e.response.body);
         }
+        if (patch) {
+          req.session.set("successes", "Change Password Successful");
+        }
+      } else {
+        req.session.set("errors", `Passwords dont match`);
       }
+
+      res.redirect("/admin");
     }
   );
 
@@ -290,25 +257,26 @@ module.exports = function (fastify, opts, done) {
       let { name, attempt } = req.body;
 
       //let deleteUser = client.adminDeleteUser(name, attempt);
-      let deleteUser = await got.delete(`${api}/admin/delete`, {
-        headers: {
-          Authorization: req.session.get("b64"),
-          Accept: "application/json",
-        },
-        json: {
-          name: name,
-        },
-      });
-
-      if (deleteUser == -1) {
-        req.session.errors.push({
-          msg: "User Deletion Failed, User Not Found",
+      try {
+        let deleteUser = await got.delete(`${api}/admin/delete`, {
+          headers: {
+            Authorization: req.session.get("b64"),
+            Accept: "application/json",
+          },
+          json: {
+            name: name,
+          },
         });
-        res.redirect("/admin");
-      } else {
-        req.session.set("successes", "User Deletion Successful");
-        res.redirect("/admin");
+        deleteUser = deleteUser.body;
+      } catch (e) {
+        req.session.set("errors", `${e.response.body}`);
+        console.log(e.response.body);
       }
+
+      if (deleteUser) {
+        req.session.set("successes", "User Deletion Successful");
+      }
+      res.redirect("/admin");
     }
   );
 
@@ -350,10 +318,27 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      const client = new CCashClient(process.env.BANKAPIURL);
+      //const client = new CCashClient(process.env.BANKAPIURL);
       let { attempt } = req.body;
+      let name = req.session.get("user");
       let close;
-      close = client.close();
+      //close = client.close();
+      let auth = btoa(`${name}:${attempt}`);
+      auth = `Basic ${auth}`;
+      try {
+        close = got.post(`${api}/admin/shutdown`, {
+          headers: {
+            Authorization: auth,
+            Accept: "application/json",
+          },
+        });
+      } catch (e) {
+        req.session.set("errors", `${e.response.body}`);
+        console.log(e.response.body);
+      }
+      if (close) {
+        req.session.set("successes", "Closed instance");
+      }
       res.redirect("../");
     }
   );

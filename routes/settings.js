@@ -3,7 +3,7 @@ const path = require("path");
 var pug = require("pug");
 const { postUser } = require(`${root}/helpers/functions.js`);
 const { CCashClient } = require("ccash-client-js");
-
+const got = require("got");
 function validate(req, res, next) {
   if (!req.session.get("user")) {
     res.redirect("/login");
@@ -11,6 +11,7 @@ function validate(req, res, next) {
     next();
   }
 }
+const api = process.env.BANKAPIURL;
 
 module.exports = function (fastify, opts, done) {
   fastify.get(
@@ -21,7 +22,7 @@ module.exports = function (fastify, opts, done) {
     async function (req, res) {
       //const client = new CCashClient(process.env.BANKAPIURL);
       //let checkalive = await client.ping();
-      let checkalive = await got(`${api}/ping`, {
+      let checkalive = await got(`${api}/help`, {
         headers: {
           Accept: "application/json",
         },
@@ -71,15 +72,21 @@ module.exports = function (fastify, opts, done) {
           attempt,
           new_pass
         );*/
-        patch = await got.patch(`${api}/user/change_password`, {
-          headers: {
-            Authorization: auth,
-            Accept: "application/json",
-          },
-          json: {
-            new_pass: new_pass,
-          },
-        });
+        try {
+          patch = await got.patch(`${api}/user/change_password`, {
+            headers: {
+              Authorization: auth,
+              Accept: "application/json",
+            },
+            json: {
+              new_pass: new_pass,
+            },
+          });
+        } catch (e) {
+          req.session.set("errors", `${e.response.body}`);
+          console.log(e.response.body);
+        }
+
         console.log(patch);
         if (patch == -2) {
           req.session.set("errors", "Password Wrong");
@@ -115,25 +122,31 @@ module.exports = function (fastify, opts, done) {
         req.session.set("errors", "Passwords don't match");
         res.redirect("/settings");
       } else {
+        let name = req.session.get("user");
+        let auth = btoa(`${name}:${password}`);
+        auth = `Basic ${auth}`;
         //del = await client.deleteUser(req.session.user, password);
-        del = await got.delete(`${api}/delete`, {
-          headers: {
-            Authorization: auth,
-            Accept: "application/json",
-          },
-        });
+        try {
+          del = await got.delete(`${api}/user/delete`, {
+            headers: {
+              Authorization: auth,
+              Accept: "application/json",
+            },
+          });
+        } catch (e) {
+          req.session.set("errors", `${e.response.body}`);
+          console.log(e.response.body);
+        }
+
         console.log(del);
-        if (del == -2) {
-          req.session.set("errors", "Password Wrong");
-          res.redirect("/settings");
-        } else {
+        if (del) {
           req.session.delete();
           req.session.set(
             "successes",
             "Account Deleted, pls dont come back to complain"
           );
-          res.redirect("/login");
         }
+        res.redirect("/");
       }
     }
   );
