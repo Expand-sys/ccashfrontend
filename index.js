@@ -251,7 +251,7 @@ fastify.post(
           Accept: "application/json",
         },
         json: {
-          to: name,
+          name: name,
           amount: amount,
         },
       });

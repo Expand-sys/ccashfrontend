@@ -71,7 +71,7 @@ module.exports = function (fastify, opts, done) {
           },
           json: {
             name: name,
-            balance: parseInt(init_bal),
+            amount: parseInt(init_bal),
             pass: init_pass,
           },
         });
