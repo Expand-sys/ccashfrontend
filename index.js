@@ -95,7 +95,7 @@ fastify.get("/", async function (req, res) {
   } else {
     //const client = new CCashClient(process.env.BANKAPIURL);
     //let checkalive = await client.ping();
-    let checkalive = await got(`${api}/help`, {
+    let checkalive = await got(`${api}../properties`, {
       headers: {
         Accept: "application/json",
       },
@@ -370,7 +370,7 @@ fastify.register(require("./routes/settings"), { prefix: "/settings" });
 fastify.get("/logout", async function (req, res) {
   //const client = new CCashClient(process.env.BANKAPIURL);
   //let checkalive = await client.ping();
-  let checkalive = await got(`${api}/help`, {
+  let checkalive = await got(`${api}../properties`, {
     headers: {
       Accept: "application/json",
     },
@@ -398,7 +398,7 @@ fastify.get("/login", async function (req, res) {
   let errors = req.session.get("errors");
   req.session.set("errors", "");
   //let checkalive = await client.ping();
-  let checkalive = await got(`${api}/help`, {
+  let checkalive = await got(`${api}../properties`, {
     headers: {
       Accept: "application/json",
     },
@@ -424,7 +424,7 @@ fastify.get("/register", async function (req, res) {
   let errors = req.session.get("errors");
   req.session.set("errors", "");
   //let checkalive = await client.ping();
-  let checkalive = await got(`${api}/help`, {
+  let checkalive = await got(`${api}../properties`, {
     headers: {
       Accept: "application/json",
     },

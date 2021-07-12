@@ -3,6 +3,8 @@
     "@mgcrea/fastify-session": "^0.14.1",
     "ccash-client-js": "^1.8.1",
     "dotenv": "^8.2.0",
+    "electron-builder": "^22.11.7",
+    "electron-squirrel-startup": "^1.0.0",
     "express-validator": "5.3.1",
     "fastify": "^3.18.0",
     "fastify-cookie": "^5.3.1",
@@ -18,6 +20,7 @@
     "pino-pretty": "^5.0.2",
     "point-of-view": "^4.15.0",
     "pug": "^3.0.2",
+    "sodium-native": "^3.2.1",
     "url": "^0.11.0"
   },
   "name": "ccashfrontend",
@@ -25,7 +28,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "repository": {
     "type": "git",
@@ -39,5 +44,14 @@
   "homepage": "https://github.com/Expand-sys/ccashfrontend#readme",
   "engines": {
     "node": "16.x"
+  },
+  "devDependencies": {
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.57",
+    "@electron-forge/maker-zip": "^6.0.0-beta.57",
+    "electron": "^13.1.6"
+  },
+  "build": {
+    "appId": "com.ccash.frontend",
+    "target": "AppImage"
   }
 }
