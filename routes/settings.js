@@ -22,7 +22,7 @@ module.exports = function (fastify, opts, done) {
     async function (req, res) {
       //const client = new CCashClient(process.env.BANKAPIURL);
       //let checkalive = await client.ping();
-      let checkalive = await got(`${api}/help`, {
+      let checkalive = await got(`${api}../properties`, {
         headers: {
           Accept: "application/json",
         },

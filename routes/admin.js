@@ -18,7 +18,7 @@ module.exports = function (fastify, opts, done) {
     async function (req, res) {
       //const client = new CCashClient(process.env.BANKAPIURL);
       //let checkalive = await client.ping();
-      let checkalive = await got(`${api}/help`, {
+      let checkalive = await got(`${api}../properties`, {
         headers: {
           Accept: "application/json",
         },
@@ -75,7 +75,7 @@ module.exports = function (fastify, opts, done) {
             pass: init_pass,
           },
         });
-        post = post.body;
+        post = post.statusCode;
       } catch (e) {
         req.session.set("errors", `${e.response.body}`);
         console.log(e.response.body);
@@ -117,7 +117,7 @@ module.exports = function (fastify, opts, done) {
       }
 
       console.log(balance);
-      if (balance) {
+      if (balance || balance == 0) {
         req.session.set(
           "successes",
           "User: " + name + " has " + balance + " truckstop shitter simoleons"
@@ -154,7 +154,7 @@ module.exports = function (fastify, opts, done) {
             amount: parseInt(amount),
           },
         });
-        patch = patch.body;
+        patch = patch.statusCode;
       } catch (e) {
         req.session.set("errors", `${e.response.body}`);
         console.log(e.response.body);
@@ -257,25 +257,27 @@ module.exports = function (fastify, opts, done) {
       let { name, attempt } = req.body;
 
       //let deleteUser = client.adminDeleteUser(name, attempt);
-      try {
-        let deleteUser = await got.delete(`${api}/admin/delete`, {
-          headers: {
-            Authorization: req.session.get("b64"),
-            Accept: "application/json",
-          },
-          json: {
-            name: name,
-          },
-        });
-        deleteUser = deleteUser.body;
-      } catch (e) {
-        req.session.set("errors", `${e.response.body}`);
-        console.log(e.response.body);
-      }
+      if (attempt != req.session.get("adminp"))
+        try {
+          let deleteUser = await got.delete(`${api}/admin/user/delete`, {
+            headers: {
+              Authorization: req.session.get("b64"),
+              Accept: "application/json",
+            },
+            json: {
+              name: name,
+            },
+          });
+          deleteUser = deleteUser.statusCode;
+          console.log(deleteUser);
+          if (deleteUser) {
+            req.session.set("successes", "User Deletion Successful");
+          }
+        } catch (e) {
+          req.session.set("errors", `${e.response.body}`);
+          console.log(e.response.body);
+        }
 
-      if (deleteUser) {
-        req.session.set("successes", "User Deletion Successful");
-      }
       res.redirect("/admin");
     }
   );

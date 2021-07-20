@@ -283,6 +283,7 @@ fastify.post("/register", async function (req, res) {
     res.redirect("/register");
   } else {
     //let checkuser = await client.addUser(name, password);
+
     try {
       let checkuser = await got.post(`${api}/user/register`, {
         headers: {
@@ -293,16 +294,16 @@ fastify.post("/register", async function (req, res) {
           pass: `${password}`,
         },
       });
+      if (checkuser) {
+        req.session.set("successes", "Account Created! please Log in");
+      }
     } catch (e) {
+      console.log(e);
       req.session.set("errors", `${e.response.body}`);
       console.log(e.response.body);
     }
 
-    console.log(await checkuser);
-    if (checkuser) {
-      req.session.set("successes", "Account Created! please Log in");
-    }
-    res.redirect("/login");
+    res.redirect("/register");
   }
 });
 
@@ -321,7 +322,6 @@ fastify.post("/login", async function (req, res) {
   }*/
   let auth = btoa(`${name}:${password}`);
   auth = `Basic ${auth}`;
-  console.log(auth);
   let adminTest;
   try {
     adminTest = await got.post(`${api}/admin/verify_account`, {
@@ -330,12 +330,13 @@ fastify.post("/login", async function (req, res) {
         Accept: "application/json",
       },
     });
-    adminTest = JSON.parse(adminTest.body);
+
+    adminTest = JSON.parse(adminTest.statusCode);
   } catch (e) {
     console.log(e.response.body);
   }
   console.log(adminTest);
-  if (adminTest) {
+  if (adminTest == 204) {
     req.session.set("b64", auth);
     req.session.set("admin", adminTest);
     req.session.set("user", name);
@@ -350,6 +351,7 @@ fastify.post("/login", async function (req, res) {
           Accept: "application/json",
         },
       });
+      verified = JSON.parse(verified.statusCode);
     } catch (e) {
       req.session.set("errors", `${e.response.body}`);
       console.log(e.response.body);
