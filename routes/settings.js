@@ -1,7 +1,6 @@
 const root = process.env.PWD;
 const path = require("path");
 var pug = require("pug");
-const { postUser } = require(`${root}/helpers/functions.js`);
 
 const got = require("got");
 function validate(req, res, next) {
