@@ -122,7 +122,6 @@ $w: Min(10em, 100%);
   }
 }
 .logo {
-  margin-bottom: -50px;
   align-content: center;
   width: 115px;
   padding: 5px;
