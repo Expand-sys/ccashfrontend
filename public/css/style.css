@@ -82,10 +82,6 @@ p {
 .text-white {
   color: white;
 }
-.form-check-input {
-  margin-left: 0;
-  padding: inherit;
-}
 
 input[type="radio"]:checked ~ .reveal-if-active,
 input[type="checkbox"]:checked ~ .reveal-if-active {
@@ -123,7 +119,6 @@ $w: Min(10em, 100%);
 }
 .logo {
   align-content: center;
-  width: 115px;
   padding: 5px;
   border-radius: 10px;
   border-color: rgba(113, 63, 230, 1);
@@ -135,4 +130,7 @@ $w: Min(10em, 100%);
     rgba(14, 3, 40, 1) 0%,
     rgba(38, 9, 108, 1) 100%
   );
+}
+#navbars {
+  flex-grow: 0;
 }

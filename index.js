@@ -238,7 +238,7 @@ fastify.post(
     req.session.set("errors", "");
     req.session.set("successes", "");
     let result;
-    //result = await client.sendFunds(a_name, senderpass, name, amount);
+    let auth = req.session.get("b64");
     try {
       result = await got.post(`${api}/user/transfer`, {
         headers: {
@@ -247,12 +247,11 @@ fastify.post(
         },
         json: {
           name: name,
-          amount: amount,
+          amount: parseInt(amount),
         },
       });
     } catch (e) {
-      req.session.set("errors", `${e.response.body}`);
-      console.log(e.response.body);
+      req.session.set("errors", `${e}`);
     }
     if (result) {
       req.session.set("successes", "Transfer successful");

@@ -199,7 +199,7 @@ module.exports = function (fastify, opts, done) {
             },
             json: {
               name: name,
-              new_pass: new_pass,
+              pass: new_pass,
             },
           });
         } catch (e) {
