@@ -43,7 +43,6 @@ body {
 }
 .logo {
   width: 250px;
-  background-color: white;
 }
 .logs {
   height: 350px;
@@ -126,8 +125,8 @@ $w: Min(10em, 100%);
   margin-bottom: -50px;
   align-content: center;
   width: 115px;
-  padding: 15px;
-  border-radius: 65px;
+  padding: 5px;
+  border-radius: 10px;
   border-color: rgba(113, 63, 230, 1);
   border-width: 2px;
   border-style: solid;

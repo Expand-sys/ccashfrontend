@@ -16,15 +16,16 @@ html
         .logo
           a.navbar-brand(href='/')
             img(src="/CCashLogo3.png" style="width:75px; height:74px")
-        button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbars', aria-controls='navbars', aria-expanded='false', aria-label='Toggle navigation')
-          span.navbar-toggler-icon
-        #navbars.collapse.navbar-collapse
           ul.navbar-nav.mr-auto
             li.nav-item
               if alive
                 p.text-white Server is Online
               if !alive 
                 p(style="color: red;") Server is offline
+        button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbars', aria-controls='navbars', aria-expanded='false', aria-label='Toggle navigation')
+          span.navbar-toggler-icon
+        #navbars.collapse.navbar-collapse
+        
           ul.navbar-nav.mr-right.text-white
             if user == undefined
               li.nav-item
