@@ -14,7 +14,6 @@ const got = require("got");
 const url = require("url");
 
 const fs = require("fs");
-const { CCashClient } = require("ccash-client-js");
 
 fastify.register(require("fastify-formbody"));
 fastify.register(require("fastify-static"), {
@@ -93,8 +92,6 @@ fastify.get("/", async function (req, res) {
   if (process.env.SETUP == false || !process.env.SETUP) {
     res.view("setup");
   } else {
-    //const client = new CCashClient(process.env.BANKAPIURL);
-    //let checkalive = await client.ping();
     let checkalive = await got(`${api}../properties`, {
       headers: {
         Accept: "application/json",
@@ -122,7 +119,6 @@ fastify.get(
     preValidation: [validate],
   },
   async function (req, res) {
-    //const client = new CCashClient(process.env.BANKAPIURL);
     let successes = req.session.get("successes");
     req.session.set("successes", "");
     let errors = req.session.get("errors");
@@ -238,7 +234,6 @@ fastify.post(
     preValidation: [validate],
   },
   async function (req, res) {
-    //const client = new CCashClient(process.env.BANKAPIURL);
     let { amount, name, senderpass } = req.body;
     req.session.set("errors", "");
     req.session.set("successes", "");
@@ -268,7 +263,6 @@ fastify.post(
 );
 
 fastify.post("/register", async function (req, res) {
-  //const client = new CCashClient(process.env.BANKAPIURL);
   var { name, password, password2 } = req.body;
   req.session.set("successes", "");
   req.session.set("errors", "");
@@ -308,18 +302,11 @@ fastify.post("/register", async function (req, res) {
 });
 
 fastify.post("/login", async function (req, res) {
-  //const client = new CCashClient(process.env.BANKAPIURL);
-
   if (req.session.get("user")) {
     res.redirect("/");
   }
   const { name, password } = req.body;
 
-  /*try {
-    adminTest = await client.adminVerifyPassword(password);
-  } catch (err) {
-    console.log(err);
-  }*/
   let auth = btoa(`${name}:${password}`);
   auth = `Basic ${auth}`;
   let adminTest;
@@ -370,8 +357,6 @@ fastify.register(require("./routes/admin"), { prefix: "/admin" });
 fastify.register(require("./routes/settings"), { prefix: "/settings" });
 
 fastify.get("/logout", async function (req, res) {
-  //const client = new CCashClient(process.env.BANKAPIURL);
-  //let checkalive = await client.ping();
   let checkalive = await got(`${api}../properties`, {
     headers: {
       Accept: "application/json",
@@ -394,7 +379,6 @@ fastify.get("/logout", async function (req, res) {
 });
 
 fastify.get("/login", async function (req, res) {
-  //const client = new CCashClient(process.env.BANKAPIURL);
   let successes = req.session.get("successes");
   req.session.set("successes", "");
   let errors = req.session.get("errors");
@@ -420,7 +404,6 @@ fastify.get("/login", async function (req, res) {
 });
 
 fastify.get("/register", async function (req, res) {
-  //const client = new CCashClient(process.env.BANKAPIURL);
   let successes = req.session.get("successes");
   req.session.set("successes", "");
   let errors = req.session.get("errors");

@@ -1,12 +1,10 @@
 const root = process.env.PWD;
 const path = require("path");
 const pug = require("pug");
-const { postUser } = require(`${root}/helpers/functions.js`);
 const got = require("got");
 
 const fs = require("fs");
 
-const { CCashClient } = require("ccash-client-js");
 const api = process.env.BANKAPIURL;
 console.log("Sen was here");
 module.exports = function (fastify, opts, done) {
@@ -16,8 +14,6 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
-      //let checkalive = await client.ping();
       let checkalive = await got(`${api}../properties`, {
         headers: {
           Accept: "application/json",
@@ -49,19 +45,12 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
       let { name, init_pass, init_bal, password2 } = req.body;
       if (!name || !init_pass || !init_bal || !password2) {
         req.session.set("errors", "please fill in all fields");
       } else if (init_pass !== password2) {
         req.session.set("errors", "Passwords don't match");
       }
-      /*let post = await client.adminAddUser(
-        name,
-        req.session.get("adminp"),
-        init_pass,
-        parseInt(init_bal)
-      );*/
       let post;
       try {
         post = await got.post(`${api}/admin/user/register`, {
@@ -93,12 +82,10 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
       let { name } = req.body;
       let balance;
       req.session.set("successes", "");
       req.session.set("errors", "");
-      //balance = await client.balance(name);
       let responsecode;
       try {
         balance = await got(`${api}/user/balance`, {
@@ -133,16 +120,10 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
       let { name, amount } = req.body;
       let patch;
       req.session.successes = [];
       req.session.errors = [];
-      /*patch = await client.setBalance(
-        name,
-        req.session.get("adminp"),
-        parseInt(amount)
-      );*/
       try {
         patch = await got.patch(`${api}/admin/set_balance`, {
           headers: {
@@ -173,16 +154,10 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
       let { name, amount } = req.body;
       let patch;
       req.session.successes = [];
       req.session.errors = [];
-      /*patch = await client.setBalance(
-        name,
-        req.session.get("adminp"),
-        parseInt(amount)
-      );*/
 
       try {
         patch = await got.post(`${api}/admin/impact_balance`, {
@@ -212,14 +187,9 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
       let { name, new_pass, password2 } = req.body;
       let patch;
-      /*patch = await client.changePassword(
-          req.session.get("user"),
-          attempt,
-          new_pass
-        );*/
+
       if (new_pass == password2) {
         try {
           patch = await got.patch(`${api}/user/change_password`, {
@@ -253,10 +223,8 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
       let { name, attempt } = req.body;
 
-      //let deleteUser = client.adminDeleteUser(name, attempt);
       if (attempt != req.session.get("adminp"))
         try {
           let deleteUser = await got.delete(`${api}/admin/user/delete`, {
@@ -320,7 +288,6 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
       let { attempt } = req.body;
       let name = req.session.get("user");
       let close;

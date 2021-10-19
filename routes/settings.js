@@ -2,7 +2,7 @@ const root = process.env.PWD;
 const path = require("path");
 var pug = require("pug");
 const { postUser } = require(`${root}/helpers/functions.js`);
-const { CCashClient } = require("ccash-client-js");
+
 const got = require("got");
 function validate(req, res, next) {
   if (!req.session.get("user")) {
@@ -20,8 +20,6 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
-      //let checkalive = await client.ping();
       let checkalive = await got(`${api}../properties`, {
         headers: {
           Accept: "application/json",
@@ -52,7 +50,6 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
-      //const client = new CCashClient(process.env.BANKAPIURL);
       let { attempt, new_pass, password2 } = req.body;
       let patch;
       if (attempt == undefined) {
@@ -67,11 +64,6 @@ module.exports = function (fastify, opts, done) {
         req.session.set("errors", "Password must be at least 6 characters");
         res.redirect("/settings");
       } else {
-        /*patch = await client.changePassword(
-          req.session.get("user"),
-          attempt,
-          new_pass
-        );*/
         try {
           patch = await got.patch(`${api}/user/change_password`, {
             headers: {
@@ -109,7 +101,6 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
-      //  const client = new CCashClient(process.env.BANKAPIURL);
       let { password, password2 } = req.body;
       let del;
       if (!password || !password2) {
@@ -125,7 +116,6 @@ module.exports = function (fastify, opts, done) {
         let name = req.session.get("user");
         let auth = btoa(`${name}:${password}`);
         auth = `Basic ${auth}`;
-        //del = await client.deleteUser(req.session.user, password);
         try {
           del = await got.delete(`${api}/user/delete`, {
             headers: {
