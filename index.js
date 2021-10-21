@@ -46,7 +46,7 @@ fastify.register(require("point-of-view"), {
 });
 
 const api = `${process.env.BANKAPIURL}`;
-console.log(api);
+
 function papy() {
   const rndInt = Math.floor(Math.random() * 1337);
   let random = false;
@@ -134,7 +134,7 @@ fastify.get(
     const user = req.session.get("user");
     const password = req.session.get("password");
     const auth = req.session.get("b64");
-    balance = await got(`${api}/user/balance`, {
+    balance = await got(`${api}user/balance`, {
       headers: {
         Authorization: auth,
         Accept: "application/json",
@@ -147,7 +147,7 @@ fastify.get(
     console.log(balance);
     console.log("start " + Date.now());
 
-    let logsent = await got(`${api}/user/log`, {
+    let logsent = await got(`${api}user/log`, {
       headers: {
         Authorization: auth,
         Accept: "application/json",
@@ -239,7 +239,7 @@ fastify.post(
     let result;
     let auth = req.session.get("b64");
     try {
-      result = await got.post(`${api}/user/transfer`, {
+      result = await got.post(`${api}user/transfer`, {
         headers: {
           Authorization: auth,
           Accept: "application/json",
@@ -277,7 +277,7 @@ fastify.post("/register", async function (req, res) {
     //let checkuser = await client.addUser(name, password);
 
     try {
-      let checkuser = await got.post(`${api}/user/register`, {
+      let checkuser = await got.post(`${api}user/register`, {
         headers: {
           Accept: "application/json",
         },
@@ -309,7 +309,7 @@ fastify.post("/login", async function (req, res) {
   auth = `Basic ${auth}`;
   let adminTest;
   try {
-    adminTest = await got.post(`${api}/admin/verify_account`, {
+    adminTest = await got.post(`${api}admin/verify_account`, {
       headers: {
         Authorization: auth,
         Accept: "application/json",
@@ -330,7 +330,7 @@ fastify.post("/login", async function (req, res) {
     let verified;
     //verified = await client.verifyPassword(name, password);
     try {
-      verified = await got.post(`${api}/user/verify_password`, {
+      verified = await got.post(`${api}user/verify_password`, {
         headers: {
           Authorization: auth,
           Accept: "application/json",

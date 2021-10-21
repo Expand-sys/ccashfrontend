@@ -53,7 +53,7 @@ module.exports = function (fastify, opts, done) {
       }
       let post;
       try {
-        post = await got.post(`${api}/admin/user/register`, {
+        post = await got.post(`${api}admin/user/register`, {
           headers: {
             Authorization: req.session.get("b64"),
             Accept: "application/json",
@@ -88,7 +88,7 @@ module.exports = function (fastify, opts, done) {
       req.session.set("errors", "");
       let responsecode;
       try {
-        balance = await got(`${api}/user/balance`, {
+        balance = await got(`${api}user/balance`, {
           headers: {
             Authorization: req.session.get("b64"),
             Accept: "application/json",
@@ -125,7 +125,7 @@ module.exports = function (fastify, opts, done) {
       req.session.successes = [];
       req.session.errors = [];
       try {
-        patch = await got.patch(`${api}/admin/set_balance`, {
+        patch = await got.patch(`${api}admin/set_balance`, {
           headers: {
             Authorization: req.session.get("b64"),
             Accept: "application/json",
@@ -160,7 +160,7 @@ module.exports = function (fastify, opts, done) {
       req.session.errors = [];
 
       try {
-        patch = await got.post(`${api}/admin/impact_balance`, {
+        patch = await got.post(`${api}admin/impact_balance`, {
           headers: {
             Authorization: req.session.get("b64"),
             Accept: "application/json",
@@ -192,7 +192,7 @@ module.exports = function (fastify, opts, done) {
 
       if (new_pass == password2) {
         try {
-          patch = await got.patch(`${api}/user/change_password`, {
+          patch = await got.patch(`${api}user/change_password`, {
             headers: {
               Authorization: req.session.get("b64"),
               Accept: "application/json",
@@ -227,7 +227,7 @@ module.exports = function (fastify, opts, done) {
 
       if (attempt != req.session.get("adminp"))
         try {
-          let deleteUser = await got.delete(`${api}/admin/user/delete`, {
+          let deleteUser = await got.delete(`${api}admin/user/delete`, {
             headers: {
               Authorization: req.session.get("b64"),
               Accept: "application/json",
