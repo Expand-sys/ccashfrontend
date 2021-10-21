@@ -45,8 +45,8 @@ fastify.register(require("point-of-view"), {
   root: path.join(__dirname, "views"),
 });
 
-const api = process.env.BANKAPIURL;
-
+const api = `${process.env.BANKAPIURL}`;
+console.log(api);
 function papy() {
   const rndInt = Math.floor(Math.random() * 1337);
   let random = false;
@@ -92,7 +92,8 @@ fastify.get("/", async function (req, res) {
   if (process.env.SETUP == false || !process.env.SETUP) {
     res.view("setup");
   } else {
-    let checkalive = await got(`${api}/../properties`, {
+    console.log(`${api}../properties`);
+    let checkalive = await got(`${api}../properties`, {
       headers: {
         Accept: "application/json",
       },
