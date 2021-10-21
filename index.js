@@ -92,7 +92,7 @@ fastify.get("/", async function (req, res) {
   if (process.env.SETUP == false || !process.env.SETUP) {
     res.view("setup");
   } else {
-    let checkalive = await got(`${api}../properties`, {
+    let checkalive = await got(`${api}/../properties`, {
       headers: {
         Accept: "application/json",
       },
@@ -133,7 +133,6 @@ fastify.get(
     const user = req.session.get("user");
     const password = req.session.get("password");
     const auth = req.session.get("b64");
-    //balance = await client.balance(req.session.get("user"));
     balance = await got(`${api}/user/balance`, {
       headers: {
         Authorization: auth,
@@ -147,7 +146,6 @@ fastify.get(
     console.log(balance);
     console.log("start " + Date.now());
 
-    //let logsent = await client.log(user, password);
     let logsent = await got(`${api}/user/log`, {
       headers: {
         Authorization: auth,
