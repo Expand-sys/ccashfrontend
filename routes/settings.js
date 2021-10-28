@@ -49,8 +49,11 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
+
       let { attempt, new_pass, password2 } = req.body;
       let patch;
+
+
       if (attempt == undefined) {
         attempt = "";
       } else if (!new_pass || !password2) {
@@ -64,16 +67,20 @@ module.exports = function (fastify, opts, done) {
         res.redirect("/settings");
       } else {
         try {
+          let name = req.session.get("user");
+          let auth = btoa(`${name}:${attempt}`);
+          auth = `Basic ${auth}`;
           patch = await got.patch(`${api}user/change_password`, {
             headers: {
               Authorization: auth,
               Accept: "application/json",
             },
             json: {
-              new_pass: new_pass,
+              pass: new_pass,
             },
           });
         } catch (e) {
+          console.log(e)
           req.session.set("errors", `${e.response.body}`);
           console.log(e.response.body);
         }
@@ -100,6 +107,7 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
+
       let { password, password2 } = req.body;
       let del;
       if (!password || !password2) {
