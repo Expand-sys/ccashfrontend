@@ -192,7 +192,7 @@ module.exports = function (fastify, opts, done) {
 
       if (new_pass == password2) {
         try {
-          patch = await got.patch(`${api}user/change_password`, {
+          patch = await got.patch(`${api}admin/user/change_password`, {
             headers: {
               Authorization: req.session.get("b64"),
               Accept: "application/json",
