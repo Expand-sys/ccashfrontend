@@ -29,7 +29,7 @@ fastify.register(require("fastify-secure-session"), {
   cookie: {
     path: "/",
     // options for setCookie, see https://github.com/fastify/fastify-cookie
-    secure: true,
+    secure: `${process.env.SECURE}`,
     httpOnly: true,
     overwrite: true,
   },
