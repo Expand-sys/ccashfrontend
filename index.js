@@ -26,12 +26,14 @@ fastify.register(require("fastify-secure-session"), {
   cookieName: "session",
   // adapt this to point to the directory where secret-key is located
   key: fs.readFileSync(path.join(__dirname, "secret-key")),
-  cookie: {
+  Cookie: {
     path: "/",
     // options for setCookie, see https://github.com/fastify/fastify-cookie
-    secure: `${process.env.SECURE}`,
+    signed: true,
+    secure: "auto",
     httpOnly: true,
     overwrite: true,
+    sameSite: "none",
   },
 });
 fastify.register(fastifyFlash);
@@ -355,7 +357,7 @@ fastify.register(require("./routes/admin"), { prefix: "/admin" });
 fastify.register(require("./routes/settings"), { prefix: "/settings" });
 
 fastify.get("/logout", async function (req, res) {
-  let checkalive = await got(`${api}../properties`, {
+  let checkalive = await got(`${api}/api/properties`, {
     headers: {
       Accept: "application/json",
     },
