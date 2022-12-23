@@ -19,7 +19,7 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
-      let checkalive = await got(`${api}../properties`, {
+      let checkalive = await got(`${api}/api/properties`, {
         headers: {
           Accept: "application/json",
         },
@@ -70,7 +70,7 @@ module.exports = function (fastify, opts, done) {
           let name = req.session.get("user");
           let auth = btoa(`${name}:${attempt}`);
           auth = `Basic ${auth}`;
-          patch = await got.patch(`${api}user/change_password`, {
+          patch = await got.patch(`${api}/api/v1/user/change_password`, {
             headers: {
               Authorization: auth,
               Accept: "application/json",
@@ -124,7 +124,7 @@ module.exports = function (fastify, opts, done) {
         let auth = btoa(`${name}:${password}`);
         auth = `Basic ${auth}`;
         try {
-          del = await got.delete(`${api}user/delete`, {
+          del = await got.delete(`${api}/api/v1/user/delete`, {
             headers: {
               Authorization: auth,
               Accept: "application/json",

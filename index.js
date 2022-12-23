@@ -92,8 +92,8 @@ fastify.get("/", async function (req, res) {
   if (process.env.SETUP == false || !process.env.SETUP) {
     res.view("setup");
   } else {
-    console.log(`${api}../properties`);
-    let checkalive = await got(`${api}../properties`, {
+    console.log(`${api}/api/properties`);
+    let checkalive = await got(`${api}/api/properties`, {
       headers: {
         Accept: "application/json",
       },
@@ -134,7 +134,7 @@ fastify.get(
     const user = req.session.get("user");
     const password = req.session.get("password");
     const auth = req.session.get("b64");
-    balance = await got(`${api}user/balance`, {
+    balance = await got(`${api}/api/v1/user/balance`, {
       headers: {
         Authorization: auth,
         Accept: "application/json",
@@ -147,7 +147,7 @@ fastify.get(
     console.log(balance);
     console.log("start " + Date.now());
 
-    let logsent = await got(`${api}user/log`, {
+    let logsent = await got(`${api}/api/v2/user/log`, {
       headers: {
         Authorization: auth,
         Accept: "application/json",
@@ -277,7 +277,7 @@ fastify.post("/register", async function (req, res) {
     //let checkuser = await client.addUser(name, password);
 
     try {
-      let checkuser = await got.post(`${api}user/register`, {
+      let checkuser = await got.post(`${api}/api/v1/user/register`, {
         headers: {
           Accept: "application/json",
         },
@@ -305,11 +305,11 @@ fastify.post("/login", async function (req, res) {
   }
   const { name, password } = req.body;
 
-  let auth = btoa(`${name}:${password}`);
+  let auth = Buffer.from(`${name}:${password}`).toString('base64');
   auth = `Basic ${auth}`;
   let adminTest;
   try {
-    adminTest = await got.post(`${api}admin/verify_account`, {
+    adminTest = await got.post(`${api}/api/v1/admin/verify_account`, {
       headers: {
         Authorization: auth,
         Accept: "application/json",
@@ -330,7 +330,7 @@ fastify.post("/login", async function (req, res) {
     let verified;
     //verified = await client.verifyPassword(name, password);
     try {
-      verified = await got.post(`${api}user/verify_password`, {
+      verified = await got.post(`${api}/api/v1/user/verify_password`, {
         headers: {
           Authorization: auth,
           Accept: "application/json",
@@ -382,7 +382,7 @@ fastify.get("/login", async function (req, res) {
   let errors = req.session.get("errors");
   req.session.set("errors", "");
   //let checkalive = await client.ping();
-  let checkalive = await got(`${api}../properties`, {
+  let checkalive = await got(`${api}/api/properties`, {
     headers: {
       Accept: "application/json",
     },
@@ -407,7 +407,7 @@ fastify.get("/register", async function (req, res) {
   let errors = req.session.get("errors");
   req.session.set("errors", "");
   //let checkalive = await client.ping();
-  let checkalive = await got(`${api}../properties`, {
+  let checkalive = await got(`${api}/api/properties`, {
     headers: {
       Accept: "application/json",
     },

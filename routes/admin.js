@@ -14,7 +14,7 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      let checkalive = await got(`${api}../properties`, {
+      let checkalive = await got(`${api}/api/properties`, {
         headers: {
           Accept: "application/json",
         },
@@ -53,7 +53,7 @@ module.exports = function (fastify, opts, done) {
       }
       let post;
       try {
-        post = await got.post(`${api}admin/user/register`, {
+        post = await got.post(`${api}/api/v1/admin/user/register`, {
           headers: {
             Authorization: req.session.get("b64"),
             Accept: "application/json",
@@ -88,7 +88,7 @@ module.exports = function (fastify, opts, done) {
       req.session.set("errors", "");
       let responsecode;
       try {
-        balance = await got(`${api}user/balance`, {
+        balance = await got(`${api}/api/v1/user/balance`, {
           headers: {
             Authorization: req.session.get("b64"),
             Accept: "application/json",
@@ -107,7 +107,7 @@ module.exports = function (fastify, opts, done) {
       if (balance || balance == 0) {
         req.session.set(
           "successes",
-          "User: " + name + " has " + balance + " truckstop shitter simoleons"
+          "User: " + name + " has " + balance + " diarrhea dollars"
         );
       }
       res.redirect("/admin");
@@ -125,7 +125,7 @@ module.exports = function (fastify, opts, done) {
       req.session.successes = [];
       req.session.errors = [];
       try {
-        patch = await got.patch(`${api}admin/set_balance`, {
+        patch = await got.patch(`${api}/api/v1/admin/set_balance`, {
           headers: {
             Authorization: req.session.get("b64"),
             Accept: "application/json",
@@ -160,7 +160,7 @@ module.exports = function (fastify, opts, done) {
       req.session.errors = [];
 
       try {
-        patch = await got.post(`${api}admin/impact_balance`, {
+        patch = await got.post(`${api}/api/v1/admin/impact_balance`, {
           headers: {
             Authorization: req.session.get("b64"),
             Accept: "application/json",
@@ -192,7 +192,7 @@ module.exports = function (fastify, opts, done) {
 
       if (new_pass == password2) {
         try {
-          patch = await got.patch(`${api}admin/user/change_password`, {
+          patch = await got.patch(`${api}/api/v1/admin/user/change_password`, {
             headers: {
               Authorization: req.session.get("b64"),
               Accept: "application/json",
@@ -227,7 +227,7 @@ module.exports = function (fastify, opts, done) {
 
       if (attempt != req.session.get("adminp"))
         try {
-          let deleteUser = await got.delete(`${api}admin/user/delete`, {
+          let deleteUser = await got.delete(`${api}/api/v1/admin/user/delete`, {
             headers: {
               Authorization: req.session.get("b64"),
               Accept: "application/json",
@@ -295,7 +295,7 @@ module.exports = function (fastify, opts, done) {
       let auth = btoa(`${name}:${attempt}`);
       auth = `Basic ${auth}`;
       try {
-        close = got.post(`${api}/admin/shutdown`, {
+        close = got.post(`${api}/api/v1/admin/shutdown`, {
           headers: {
             Authorization: auth,
             Accept: "application/json",
