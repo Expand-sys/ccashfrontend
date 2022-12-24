@@ -51,39 +51,44 @@ block content
                 
     script(type='text/javascript' src='https://www.gstatic.com/charts/loader.js')
     script(type='text/javascript').
-      
-      google.charts.load('current', {'packages':['corechart', 'line']});
-      google.charts.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([!{graphdata}]);
+      google.charts.load('current', {packages: ['corechart', 'line']});
+      google.charts.setOnLoadCallback(drawBasic);
 
-        var options = {
-          title: 'Balance',
-          hAxis: {
-            title: 'Transaction', 
-            textPosition: 'out',
-            },
-          vAxis: {
-            title: 'Balance',
-            format: 'currency',
-            textPosition: 'out',
-            },
-          trendlines: {
-            0: {type: 'exponential', color: '#333', opacity: .5},
-            1: {type: 'linear', color: '#111', opacity: .3}
-          },
+      function drawBasic() {
+
+            var data = google.visualization.arrayToDataTable([!{graphdata}]);
+
+
+            var options = {
+              hAxis: {
+                title: 'Transactions'
+              },
+              vAxis: {
+                title: 'Current Balance'
+              },
+              trendlines: {
+                0: {type: 'exponential', color: '#333', opacity: .5},
+                1: {type: 'linear', color: '#111', opacity: .3}
+              },
           width: 680,
           height: 350,
         };
-        function resize () {
-          var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-          chart.draw(data, options);
-        }
 
-        window.onload = resize;
-        window.onresize = resize;
-        
-      }
+            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+
+            chart.draw(data, options);
+          
+          window.onload = resize;
+          window.onresize = resize;   
+          
+          }
+          
+    
+          
+    
+    
+    
+    
     script(type='text/javascript').
       function resize () {
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));

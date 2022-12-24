@@ -155,48 +155,70 @@ fastify.get(
         Accept: "application/json",
       },
     });
-    log = JSON.parse(log.body);
-    console.log(log);
-    let graphlog = log;
-    if (graphlog != null) {
-      graphlog = graphlog.reverse();
-    }
-    let graphdata = "";
-    let currentbal = balance;
-    if (graphlog) {
-      for (i = graphlog.length - 1; i > -1; i--) {
-        currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
-          graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
-      }
-    } else {
-      graphlog = undefined;
-    }
-    if (graphdata != "") {
-      graphdata =
-        ", [" + parseInt(graphlog.length) + "," + balance + "]" + graphdata;
-      graphdata = '["transaction", "balance"]' + graphdata;
-    }
+    console.log(log.body)
     let transactionlog = []
-    for(i = 0; i < log.length; i++){
-      if(log[i].amount > 0){
-        let absol = Math.abs(log[i].amount)
-        console.log(absol)
-        let date = Date(log[i].time)
-        console.log(date)
-        transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
-
-      } else {
-
-        transactionlog.push(`${log[i].counterparty} sent you ${log[i].amount} at ${log[i].time}`);
-
+    let currentbal = balance;
+    let graphlog = log;
+    let graphdata = []
+    if(log.body != "null"){
+      log = JSON.parse(log.body);
+      let graphlog = log;
+      if (graphlog != null) {
+        graphlog = graphlog.reverse();
       }
-    }
+      console.log(graphlog)
+      console.log("here fuckwit")
 
-    console.log(transactionlog)
-    let maxgraph = balance + 1000;
-    console.log(graphdata)
-    console.log("begin render " + Date.now());
+
+
+
+      if (graphlog) {
+        for (i = 0; i < graphlog.length; i++) {
+          console.log(i)
+          console.log(graphlog[0])
+          currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
+          if( i > 14)
+            break
+          graphdata.push([i+1, currentbal])
+          
+        }
+        const seconds = Math.floor(Date.now() / 1000);
+        graphdata.unshift([0 , balance])
+        graphdata.unshift(["Transaction", "Amount"])
+
+      console.log(graphdata)
+      } else {
+        graphlog = undefined;
+      }
+      
     
+      for(i = 0; i < log.length; i++){
+        console.log(log[i])
+        if(log[i].amount < 0){
+          let absol = Math.abs(log[i].amount)
+          console.log(absol)
+          let date = new Date(log[i].time * 1000)
+          console.log(date)
+          transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
+
+        } else {
+          let date = new Date(log[i].time * 1000)
+
+          transactionlog.push(`${log[i].counterparty} sent you ${log[i].amount} at ${date}`);
+
+        }
+        console.log(transactionlog)
+        
+        console.log(graphdata)
+      }
+      
+      
+      console.log("begin render " + Date.now());
+    }
+    let maxgraph = balance + 1000;
+    stringgraphdata = JSON.stringify(graphdata)
+    console.log(stringgraphdata)
+    graphdata = stringgraphdata.slice(1,stringgraphdata.length-1)
     res.view("bankf", {
       transactionlog: transactionlog,
       maxgraph: maxgraph,
@@ -303,6 +325,7 @@ fastify.post("/login", async function (req, res) {
     adminTest = JSON.parse(adminTest.statusCode);
   } catch (e) {
     console.log(e.response.body);
+    console.log("yeet")
   }
   console.log(adminTest);
   if (adminTest == 204) {
@@ -312,7 +335,6 @@ fastify.post("/login", async function (req, res) {
     req.session.set("password", password);
   } else {
     let verified;
-    //verified = await client.verifyPassword(name, password);
     try {
       verified = await got.post(`${api}/api/v1/user/verify_password`, {
         headers: {
