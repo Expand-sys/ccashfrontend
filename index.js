@@ -149,16 +149,15 @@ fastify.get(
     console.log(balance);
     console.log("start " + Date.now());
 
-    let logsent = await got(`${api}/api/v2/user/log`, {
+    let log = await got(`${api}/api/v2/user/log`, {
       headers: {
         Authorization: auth,
         Accept: "application/json",
       },
     });
-    logsent = JSON.parse(logsent.body);
-    console.log(logsent);
-    let logrec = logsent;
-    let graphlog = logsent;
+    log = JSON.parse(log.body);
+    console.log(log);
+    let graphlog = log;
     if (graphlog != null) {
       graphlog = graphlog.reverse();
     }
@@ -166,13 +165,8 @@ fastify.get(
     let currentbal = balance;
     if (graphlog) {
       for (i = graphlog.length - 1; i > -1; i--) {
-        if (graphlog[i].from == req.session.get("user")) {
-          currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
+        currentbal = parseInt(currentbal) + parseInt(graphlog[i].amount);
           graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
-        } else {
-          currentbal = parseInt(currentbal) - parseInt(graphlog[i].amount);
-          graphdata = graphdata + ", [" + parseInt(i) + "," + currentbal + "]";
-        }
       }
     } else {
       graphlog = undefined;
@@ -182,43 +176,31 @@ fastify.get(
         ", [" + parseInt(graphlog.length) + "," + balance + "]" + graphdata;
       graphdata = '["transaction", "balance"]' + graphdata;
     }
-    if (logsent == null) {
-      logsent = undefined;
-    } else {
-      logsent = await logsent.filter(
-        ({ from }) => from === req.session.get("user")
-      );
-    }
-    if (logrec == null) {
-      logrec = undefined;
-    } else {
-      logrec = await logrec.filter(({ to }) => to === req.session.get("user"));
-    }
-    if (logsent) {
-      for (i in logrec) {
-        logrec[i].time = new Date(logrec[i].time);
+    let transactionlog = []
+    for(i = 0; i < log.length; i++){
+      if(log[i].amount > 0){
+        let absol = Math.abs(log[i].amount)
+        console.log(absol)
+        let date = Date(log[i].time)
+        console.log(date)
+        transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
+
+      } else {
+
+        transactionlog.push(`${log[i].counterparty} sent you ${log[i].amount} at ${log[i].time}`);
+
       }
     }
-    if (logrec) {
-      for (i in logsent) {
-        logsent[i].time = new Date(logsent[i].time);
-      }
-    }
-    if (logrec != null) {
-      logrec.reverse();
-    }
-    if (logsent != null) {
-      logsent.reverse();
-    }
-    console.log(logrec);
-    console.log(logsent);
+
+    console.log(transactionlog)
     let maxgraph = balance + 1000;
+    console.log(graphdata)
     console.log("begin render " + Date.now());
+    
     res.view("bankf", {
+      transactionlog: transactionlog,
       maxgraph: maxgraph,
       graphdata: graphdata,
-      logrec: logrec,
-      logsent: logsent,
       user: req.session.get("user"),
       balance: balance,
       admin: req.session.get("admin"),
@@ -241,7 +223,7 @@ fastify.post(
     let result;
     let auth = req.session.get("b64");
     try {
-      result = await got.post(`${api}user/transfer`, {
+      result = await got.post(`${api}/api/v1/user/transfer`, {
         headers: {
           Authorization: auth,
           Accept: "application/json",

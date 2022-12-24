@@ -35,28 +35,17 @@ block content
           
             ul#transactions.nav.nav-tabs.card-header-tabs(role='tablist')
               li.nav-item
-                a.nav-link.active.text-black(href='#sent', role='tab', aria-controls='sent', aria-selected='true') Sent
-              li.nav-item
-                a.nav-link.text-black(href='#received', role='tab', aria-controls='recieved', aria-selected='false') Recieved
+                a.nav-link.active.text-black(href='#transaction-list', role='tab', aria-controls='sent', aria-selected='true') Transaction List
               li.nav-item
                 a.nav-link.text-black(href='#balhistory', role='tab', aria-controls='balhistory', aria-selected='false') Balance History
             .tab-content.mt-3
-              #sent.tab-pane.active(role='tabpanel')
+              #transaction-list.tab-pane.active(role='tabpanel')
                 .logs
-                  if logsent
-                    each log in logsent
+                  if transactionlog
+                    each i in transactionlog
                       hr
-                      p Date: #{log.time}
-                      p You sent #{log.to} $#{log.amount}
-                      hr
-              #received.tab-pane(role='tabpanel', aria-labelledby='recieved-tab')
-                .logs
-                  if logrec
-                    each log in logrec
-                      hr
-                      p Date: #{log.time}
-                      p #{log.from} sent you $#{log.amount}
-                      hr
+                      p #{i}
+
               #balhistory.tab-pane(role='tabpanel', aria-labelledby='balhistory-tab')         
                 #chart_div(style="width:100%; height 100%")
                 
