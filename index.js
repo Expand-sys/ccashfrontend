@@ -195,7 +195,7 @@ fastify.get(
           
         }
         const seconds = Math.floor(Date.now() / 1000);
-        graphdata.unshift([0 , balance])
+        graphdata.push([graphdata.length+1 , balance])
         graphdata.unshift(["Transaction", "Amount"])
 
       } else {
