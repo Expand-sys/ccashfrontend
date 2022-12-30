@@ -158,72 +158,54 @@ fastify.get(
     console.log(log.body)
     let transactionlog = []
     let currentbal = balance;
-    let graphlog = log;
+    log = JSON.parse(log.body);
+    let graphlog = log.reverse();
     let graphdata = []
-    if(log.body != "null"){
-      log = JSON.parse(log.body);
-      console.log(log)
-      log = log.reverse()
-      let graphlog = log;
-      if (graphlog != null) {
-        //graphlog = graphlog.reverse();
-      }
+    let final = []
+    
+    console.log(graphlog)
+    console.log(`the previous thing should be a array`)
+    final.push(parseInt(balance))
+    console.log(final)
+    for(let i = 0; i < 16; i++) {
+      console.log(`itshiptobeesfuck`)
+      console.log(graphlog[i].amount)
 
+      let thingy = parseInt(final[i]) + parseInt(graphlog[i].amount) 
+      final.push(`${thingy}`)
+    }
+    console.log(`here`)
+    console.log(`${final}`)
+    final = final.reverse()
+    final.unshift(balance)
+    let final2 = [];
+    for(let i=0;i<final.length;i++){
+      final2.push([i, final[i]])
+    }
+    final2.unshift(["Transaction", "Amount"])
 
+  
+    for(i = 0; i < 15; i++){
 
-
-      if (graphlog) {
-        
-        
-        
-        
-        for (i = 0; i < graphlog.length; i++) {
-          
-          if(graphlog[i].amount >= 0 ){
-            currentbal =  parseInt(currentbal) + (parseInt(graphlog[i].amount));
-            if( i > 14)
-              break
-            graphdata.push([i+1, currentbal])
-          } else{
-            currentbal =   parseInt(currentbal) + (parseInt(graphlog[i].amount));
-            if( i > 14)
-              break
-            graphdata.push([i+1, currentbal])
-          }
-          
-          
-          
-        }
-        const seconds = Math.floor(Date.now() / 1000);
-        graphdata.push([graphdata.length+1 , balance])
-        graphdata.unshift(["Transaction", "Amount"])
+      
+      if(log[i].amount > 0){
+        let absol = Math.abs(log[i].amount)
+        let date = new Date(log[i].time * 1000)
+        transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
 
       } else {
-        graphlog = undefined;
+        let date = new Date(log[i].time * 1000)
+        let absol = Math.abs(log[i].amount)
+        transactionlog.push(`${log[i].counterparty} sent you ${absol} at ${date}`);
+
       }
-      
-    
-      for(i = 0; i < log.length; i++){
-
-        
-        if(log[i].amount < 0){
-          let absol = Math.abs(log[i].amount)
-          let date = new Date(log[i].time * 1000)
-          transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
-
-        } else {
-          let date = new Date(log[i].time * 1000)
-
-          transactionlog.push(`${log[i].counterparty} sent you ${log[i].amount} at ${date}`);
-
-        }
-      }
-      
-      
-      console.log("begin render " + Date.now());
     }
+    console.log(final)
+    
+    console.log("begin render " + Date.now());
+  
     let maxgraph = balance + 1000;
-    stringgraphdata = JSON.stringify(graphdata)
+    stringgraphdata = JSON.stringify(final2)
     console.log(stringgraphdata)
     graphdata = stringgraphdata.slice(1,stringgraphdata.length-1)
     res.view("bankf", {
