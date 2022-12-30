@@ -162,12 +162,12 @@ fastify.get(
     let graphdata = []
     if(log.body != "null"){
       log = JSON.parse(log.body);
+      console.log(log)
+      log = log.reverse()
       let graphlog = log;
       if (graphlog != null) {
-        graphlog = graphlog.reverse();
+        //graphlog = graphlog.reverse();
       }
-      console.log(graphlog)
-      console.log("here fuckwit")
 
 
 
@@ -180,12 +180,12 @@ fastify.get(
         for (i = 0; i < graphlog.length; i++) {
           
           if(graphlog[i].amount >= 0 ){
-            currentbal = (parseInt(graphlog[i].amount)) + parseInt(currentbal);
+            currentbal =  parseInt(currentbal) + (parseInt(graphlog[i].amount));
             if( i > 14)
               break
             graphdata.push([i+1, currentbal])
           } else{
-            currentbal =  (parseInt(graphlog[i].amount)) + parseInt(currentbal);
+            currentbal =   parseInt(currentbal) + (parseInt(graphlog[i].amount));
             if( i > 14)
               break
             graphdata.push([i+1, currentbal])
@@ -204,12 +204,11 @@ fastify.get(
       
     
       for(i = 0; i < log.length; i++){
-        console.log(log[i])
+
+        
         if(log[i].amount < 0){
           let absol = Math.abs(log[i].amount)
-          console.log(absol)
           let date = new Date(log[i].time * 1000)
-          console.log(date)
           transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
 
         } else {
