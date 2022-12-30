@@ -164,7 +164,7 @@ fastify.get(
       log = JSON.parse(log.body);
       let graphlog = log;
       if (graphlog != null) {
-        //graphlog = graphlog.reverse();
+        graphlog = graphlog.reverse();
       }
       console.log(graphlog)
       console.log("here fuckwit")
