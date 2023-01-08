@@ -161,7 +161,7 @@ fastify.get(
     let final = []
     let final2 = [];
 
-    if(log != null){
+    /*if(log != null){
       let graphlog = log.reverse();
 
       
@@ -192,34 +192,34 @@ fastify.get(
       final2.unshift(["Transaction", "Amount"])
   
     
-      for(i = 0; i < log.length; i++){
+     
+    }*/
+    for(i = 0; i < log.length; i++){
   
         
-        if(log[i].amount > 0){
-          let absol = Math.abs(log[i].amount)
-          let date = new Date(log[i].time * 1000)
-          transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
-  
-        } else {
-          let date = new Date(log[i].time * 1000)
-          let absol = Math.abs(log[i].amount)
-          transactionlog.push(`${log[i].counterparty} sent you ${absol} at ${date}`);
-  
-        }
+      if(log[i].amount > 0){
+        let absol = Math.abs(log[i].amount)
+        let date = new Date(log[i].time * 1000)
+        transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
+
+      } else {
+        let date = new Date(log[i].time * 1000)
+        let absol = Math.abs(log[i].amount)
+        transactionlog.push(`${log[i].counterparty} sent you ${absol} at ${date}`);
+
       }
     }
     
-    
     console.log("begin render " + Date.now());
   
-    let maxgraph = balance + 1000;
-    let stringgraphdata = JSON.stringify(final2)
-    console.log(stringgraphdata)
-    let graphdata = stringgraphdata.slice(1,stringgraphdata.length-1)
+    //let maxgraph = balance + 1000;
+    //let stringgraphdata = JSON.stringify(final2)
+    //console.log(stringgraphdata)
+    //let graphdata = stringgraphdata.slice(1,stringgraphdata.length-1)
     res.view("bankf", {
       transactionlog: transactionlog,
-      maxgraph: maxgraph,
-      graphdata: graphdata,
+      //maxgraph: maxgraph,
+      //graphdata: graphdata,
       user: req.session.get("user"),
       balance: balance,
       admin: req.session.get("admin"),
