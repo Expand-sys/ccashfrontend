@@ -194,6 +194,7 @@ fastify.get(
     
      
     }*/
+    log.reverse()
     for(i = 0; i < log.length; i++){
   
         
