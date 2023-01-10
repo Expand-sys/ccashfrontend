@@ -3,7 +3,7 @@ extends layout
 block content
   .container
     h1 Register
-    form#register(method='POST', action='/register')
+    form#captchaenabled(method='POST', action='/register')
       #form-group
         label Username:
         input.form-control(name='name', type='name')

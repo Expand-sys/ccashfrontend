@@ -13,5 +13,5 @@ $(document).ready(function(){
 });
 
 function onSubmit(token) {
-    document.getElementById("register").submit();
+    document.getElementById("captchaenabled").submit();
 }
