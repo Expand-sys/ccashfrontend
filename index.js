@@ -196,24 +196,24 @@ fastify.get(
     }*/
     if(log){
       log.reverse()
-    }
     
-    for(i = 0; i < log.length; i++){
-  
-      
-      if(log[i].amount > 0){
-        let absol = Math.abs(log[i].amount)
-        let date = new Date(log[i].time * 1000)
-        transactionlog.push(`${log[i].counterparty} sent you ${absol} at ${date}`);
+    
+      for(i = 0; i < log.length; i++){
+    
+        
+        if(log[i].amount > 0){
+          let absol = Math.abs(log[i].amount)
+          let date = new Date(log[i].time * 1000)
+          transactionlog.push(`${log[i].counterparty} sent you ${absol} at ${date}`);
 
-      } else {
-        let date = new Date(log[i].time * 1000)
-        let absol = Math.abs(log[i].amount)
-        transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
+        } else {
+          let date = new Date(log[i].time * 1000)
+          let absol = Math.abs(log[i].amount)
+          transactionlog.push(`You sent ${log[i].counterparty} ${absol} at ${date}`);
 
+        }
       }
     }
-    
     console.log("begin render " + Date.now());
   
     //let maxgraph = balance + 1000;
