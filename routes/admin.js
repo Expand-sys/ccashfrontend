@@ -158,7 +158,9 @@ module.exports = function (fastify, opts, done) {
       let patch;
       req.session.successes = [];
       req.session.errors = [];
-
+      console.log(amount)
+      amount = parseInt(amount, 10)
+      console.log(amount)
       try {
         patch = await got.post(`${api}/api/v1/admin/impact_balance`, {
           headers: {
@@ -167,7 +169,7 @@ module.exports = function (fastify, opts, done) {
           },
           json: {
             name: name,
-            amount: parseInt(amount),
+            amount: amount,
           },
         });
       } catch (e) {
@@ -175,6 +177,7 @@ module.exports = function (fastify, opts, done) {
         console.log(e.response.body);
       }
       if (patch) {
+        req.session.set("errors", "")
         req.session.set("successes", "Change Funds Successful");
       }
       res.redirect("/admin");
