@@ -3,7 +3,7 @@ extends layout
 block content
   .container
     h1 Register
-    form(method='POST', action='/register')
+    form#register(method='POST', action='/register')
       #form-group
         label Username:
         input.form-control(name='name', type='name')
@@ -12,7 +12,7 @@ block content
         label Confirm:
         input.form-control(name='password2',type='password')
       br
-      input.btn.btn-primary(type='submit',value='Submit')
+      button.btn.btn-primary.g-recaptcha(data-sitekey="6Lc7fHEjAAAAAJnqvvlEEXL6kHMwnOlU7XbOcSRv" data-callback='onSubmit' data-action='submit') Submit
 
     br
     br

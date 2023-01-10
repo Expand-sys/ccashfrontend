@@ -11,3 +11,7 @@ $(document).ready(function(){
         $(this).tab('show');
     });
 });
+
+function onSubmit(token) {
+    document.getElementById("register").submit();
+}
