@@ -194,7 +194,10 @@ fastify.get(
     
      
     }*/
-    log.reverse()
+    if(log){
+      log.reverse()
+    }
+    
     for(i = 0; i < log.length; i++){
   
       
@@ -307,7 +310,12 @@ fastify.post("/login", async function (req, res) {
   if (req.session.get("user")) {
     res.redirect("/");
   }
-  const { name, password } = req.body;
+  const { name, password, score, success } = req.body;
+  console.log(success, score)
+  if( score <= 0.2 && success == true){
+    req.session.set("errors", "failed captcha")
+    res.redirect("/login")
+  }
 
   let auth = Buffer.from(`${name}:${password}`).toString('base64');
   auth = `Basic ${auth}`;
