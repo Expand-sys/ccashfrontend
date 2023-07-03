@@ -9,7 +9,7 @@ block content
           h1.text-black Login
           hr
           p
-          form#captchaenabled(method='POST', action='/login')
+          form(method='POST', action='/login')
             #form-group
               label Username:
               input.form-control(name='name', type='text')
@@ -20,6 +20,6 @@ block content
               br
 
 
-          button.btn.btn-primary.g-recaptcha(data-sitekey="6Lc7fHEjAAAAAJnqvvlEEXL6kHMwnOlU7XbOcSRv" data-callback='onSubmit' data-action='submit') Submit
+          button.btn.btn-primary(data-action='submit') Submit
       .col-sm
             
