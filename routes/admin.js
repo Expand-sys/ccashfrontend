@@ -1,12 +1,12 @@
 const root = process.env.PWD;
 const path = require("path");
 const pug = require("pug");
-const got = require("got");
 
 const fs = require("fs");
 
 const api = process.env.BANKAPIURL;
 console.log("Sen was here");
+
 module.exports = function (fastify, opts, done) {
   fastify.get(
     "/",
@@ -14,7 +14,7 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validateAdmin],
     },
     async function (req, res) {
-      let checkalive = await got(`${api}/api/properties`, {
+      let checkalive = await fetch(`${api}/api/properties`, {
         headers: {
           Accept: "application/json",
         },
@@ -24,16 +24,15 @@ module.exports = function (fastify, opts, done) {
       } else {
         alive = false;
       }
-      let successes = req.session.get("successes");
-      req.session.set("successes", "");
-      let errors = req.session.get("errors");
-      req.session.set("errors", "");
-      res.view("adminsettings", {
-        user: req.session.get("user"),
-        admin: req.session.get("admin"),
+      let successes = req.session.successes;
+      req.session.successes = "";
+      let errors = req.session.errors;
+      req.session.errors = "";
+      return res.view("adminsettings", {
+        user: req.session.user,
+        admin: req.session.admin,
         errors: errors,
         successes: successes,
-        random: papy(),
         alive: alive,
       });
     }
@@ -47,30 +46,32 @@ module.exports = function (fastify, opts, done) {
     async function (req, res) {
       let { name, init_pass, init_bal, password2 } = req.body;
       if (!name || !init_pass || !init_bal || !password2) {
-        req.session.set("errors", "please fill in all fields");
+        req.session.errors = "please fill in all fields";
       } else if (init_pass !== password2) {
-        req.session.set("errors", "Passwords don't match");
+        req.session.errors = "Passwords don't match";
       }
       let post;
       try {
-        post = await got.post(`${api}/api/v1/admin/user/register`, {
+        post = await fetch(`${api}/api/v1/admin/user/register`, {
+          method: 'POST',
           headers: {
-            Authorization: req.session.get("b64"),
+            Authorization: req.session.b64,
             Accept: "application/json",
+            "Content-Type": "application/json",
           },
-          json: {
-            name: name,
-            amount: parseInt(init_bal),
-            pass: init_pass,
-          },
+          body: JSON.stringify({
+            "name": name,
+            "amount": parseInt(init_bal),
+            "pass": init_pass,
+          }),
         });
-        post = post.statusCode;
+        post = post.ok;
       } catch (e) {
-        req.session.set("errors", `${e.response.body}`);
-        console.log(e.response.body);
+        req.session.errors = `${e.text()}`;
+        console.log(e.text());
       }
       if (post) {
-        req.session.set("successes", `User ${name} registered.`);
+        req.session.successes = `User ${name} registered.`;
       }
       res.redirect("/admin");
     }
@@ -84,31 +85,29 @@ module.exports = function (fastify, opts, done) {
     async function (req, res) {
       let { name } = req.body;
       let balance;
-      req.session.set("successes", "");
-      req.session.set("errors", "");
+      req.session.successes = "";
+      req.session.errors = "";
       let responsecode;
       try {
-        balance = await got(`${api}/api/v1/user/balance`, {
+        balance = await fetch(`${api}/api/v1/user/balance`, {
           headers: {
-            Authorization: req.session.get("b64"),
+            Authorization: req.session.b64,
             Accept: "application/json",
+            "Content-Type": "application/json",
           },
           searchParams: {
-            name: name,
+            "name": name,
           },
         });
         balance = parseInt(balance.body);
       } catch (e) {
-        req.session.set("errors", `${e.response.body}`);
-        console.log(e.response.body);
+        req.session.errors = `${e}`;
+        console.log(e);
       }
 
       console.log(balance);
       if (balance || balance == 0) {
-        req.session.set(
-          "successes",
-          "User: " + name + " has " + balance + " diarrhea dollars"
-        );
+        req.session.successes = "User: " + name + " has " + balance + " CCash";
       }
       res.redirect("/admin");
     }
@@ -122,28 +121,32 @@ module.exports = function (fastify, opts, done) {
     async function (req, res) {
       let { name, amount } = req.body;
       let patch;
-      req.session.successes = [];
-      req.session.errors = [];
+      req.session.successes = ""
+      req.session.errors = ""
+      console.log(name, amount)
       try {
-        patch = await got.patch(`${api}/api/v1/admin/set_balance`, {
+        patch = await fetch(`${api}/api/v1/admin/set_balance`, {
+          method: 'PATCH',
           headers: {
-            Authorization: req.session.get("b64"),
-            Accept: "application/json",
+            Authorization: `${req.session.b64}`,
+            Accept: "*/*",
+            "Content-Type": "application/json",
           },
-          json: {
-            name: name,
-            amount: parseInt(amount),
-          },
+          body: JSON.stringify({
+            "name": `${name}`,
+            "amount": parseInt(amount),
+          }),
         });
-        patch = patch.statusCode;
+        console.log(patch, patch.blob())
+        patch = patch.ok;
       } catch (e) {
-        req.session.set("errors", `${e.response.body}`);
-        console.log(e.response.body);
+        req.session.errors = e;
+        console.log(e);
       }
 
       console.log(patch);
       if (patch) {
-        req.session.set("successes", "Change Funds Successful");
+        req.session.successes = "Change Funds Successful";
       }
       res.redirect("/admin");
     }
@@ -162,23 +165,25 @@ module.exports = function (fastify, opts, done) {
       amount = parseInt(amount, 10)
       console.log(amount)
       try {
-        patch = await got.post(`${api}/api/v1/admin/impact_balance`, {
+        patch = await fetch(`${api}/api/v1/admin/impact_balance`, {
+          method: 'POST',
           headers: {
-            Authorization: req.session.get("b64"),
+            Authorization: req.session.b64,
             Accept: "application/json",
+            "Content-Type": "application/json",
           },
-          json: {
-            name: name,
-            amount: amount,
-          },
+          body: JSON.stringify({
+            "name": name,
+            "amount": amount,
+          }),
         });
       } catch (e) {
-        req.session.set("errors", `${e.response.body}`);
-        console.log(e.response.body);
+        req.session.errors = `${e}`;
+        console.log(e);
       }
       if (patch) {
-        req.session.set("errors", "")
-        req.session.set("successes", "Change Funds Successful");
+        req.session.errors = ""
+        req.session.successes = "Change Funds Successful";
       }
       res.redirect("/admin");
     }
@@ -195,25 +200,27 @@ module.exports = function (fastify, opts, done) {
 
       if (new_pass == password2) {
         try {
-          patch = await got.patch(`${api}/api/v1/admin/user/change_password`, {
+          patch = await fetch(`${api}/api/v1/admin/user/change_password`, {
+            method: 'PATCH',
             headers: {
-              Authorization: req.session.get("b64"),
+              Authorization: req.session.b64,
               Accept: "application/json",
+              "Content-Type": "application/json",
             },
-            json: {
-              name: name,
-              pass: new_pass,
-            },
+            body: JSON.stringify({
+              "name": name,
+              "pass": new_pass,
+            }),
           });
         } catch (e) {
-          req.session.set("errors", `${e.response.body}`);
-          console.log(e.response.body);
+          req.session.errors = `${e}`;
+          console.log(e);
         }
         if (patch) {
-          req.session.set("successes", "Change Password Successful");
+          req.session.successes = "Change Password Successful";
         }
       } else {
-        req.session.set("errors", `Passwords dont match`);
+        req.session.errors = `Passwords dont match`;
       }
 
       res.redirect("/admin");
@@ -228,25 +235,27 @@ module.exports = function (fastify, opts, done) {
     async function (req, res) {
       let { name, attempt } = req.body;
 
-      if (attempt != req.session.get("adminp"))
+      if (attempt != req.session.adminp)
         try {
-          let deleteUser = await got.delete(`${api}/api/v1/admin/user/delete`, {
+          let deleteUser = await fetch(`${api}/api/v1/admin/user/delete`, {
+            method: 'DELETE',
             headers: {
-              Authorization: req.session.get("b64"),
+              Authorization: req.session.b64,
               Accept: "application/json",
+              "Content-Type": "application/json",
             },
-            json: {
-              name: name,
-            },
+            body: JSON.stringify({
+              "name": name,
+            }),
           });
           deleteUser = deleteUser.statusCode;
           console.log(deleteUser);
           if (deleteUser) {
-            req.session.set("successes", "User Deletion Successful");
+            req.session.successes = "User Deletion Successful";
           }
         } catch (e) {
-          req.session.set("errors", `${e.response.body}`);
-          console.log(e.response.body);
+          req.session.errors = `${e}`;
+          console.log(e);
         }
 
       res.redirect("/admin");
@@ -292,43 +301,37 @@ module.exports = function (fastify, opts, done) {
     },
     async function (req, res) {
       let { attempt } = req.body;
-      let name = req.session.get("user");
+      let name = req.session.user;
       let close;
       //close = client.close();
       let auth = btoa(`${name}:${attempt}`);
       auth = `Basic ${auth}`;
       try {
-        close = got.post(`${api}/api/v1/admin/shutdown`, {
+        close = fetch(`${api}/api/v1/admin/shutdown`, {
+          method: 'POST',
           headers: {
             Authorization: auth,
             Accept: "application/json",
+            "Content-Type": "application/json",
           },
         });
       } catch (e) {
-        req.session.set("errors", `${e.response.body}`);
-        console.log(e.response.body);
+        req.session.errors = `${e}`;
+        console.log(e);
       }
       if (close) {
-        req.session.set("successes", "Closed instance");
+        req.session.successes = "Closed instance";
       }
       res.redirect("../");
     }
   );
 
   function validateAdmin(req, res, next) {
-    if (!req.session.get("admin")) {
+    if (!req.session.admin) {
       res.redirect("/login");
     } else {
       next();
     }
-  }
-  function papy() {
-    const rndInt = Math.floor(Math.random() * 1337);
-    let random = false;
-    if (rndInt == 420) {
-      random = true;
-    }
-    return random;
   }
   done();
 };

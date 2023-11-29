@@ -2,7 +2,6 @@ const root = process.env.PWD;
 const path = require("path");
 var pug = require("pug");
 
-const got = require("got");
 function validate(req, res, next) {
   if (!req.session.get("user")) {
     res.redirect("/login");
@@ -19,7 +18,7 @@ module.exports = function (fastify, opts, done) {
       preValidation: [validate],
     },
     async function (req, res) {
-      let checkalive = await got(`${api}/api/properties`, {
+      let checkalive = await fetch(`${api}/api/properties`, {
         headers: {
           Accept: "application/json",
         },
@@ -29,15 +28,15 @@ module.exports = function (fastify, opts, done) {
       } else {
         alive = false;
       }
-      let successes = req.session.get("successes");
-      req.session.set("successes", "");
-      let errors = req.session.get("errors");
-      req.session.set("errors", "");
-      res.view("settings", {
+      let successes = req.session.successes;
+      req.session.successes = "";
+      let errors = req.session.errors;
+      req.session.errors = "";
+      return res.view("settings", {
         errors: errors,
         successes: successes,
-        user: req.session.get("user"),
-        admin: req.session.get("admin"),
+        user: req.session.user,
+        admin: req.session.admin,
         alive: true,
       });
     }
@@ -57,45 +56,43 @@ module.exports = function (fastify, opts, done) {
       if (attempt == undefined) {
         attempt = "";
       } else if (!new_pass || !password2) {
-        req.session.set("errors", "please fill in all fields");
+        req.session.errors = "please fill in all fields";
         res.redirect("/settings");
       } else if (new_pass != password2) {
-        req.session.set("errors", "Passwords don't match");
+        req.session.errors = "Passwords don't match";
         res.redirect("/settings");
       } else if (new_pass.length < 6) {
-        req.session.set("errors", "Password must be at least 6 characters");
+        req.session.errors = "Password must be at least 6 characters";
         res.redirect("/settings");
       } else {
         try {
-          let name = req.session.get("user");
+          let name = req.session.user;
           let auth = btoa(`${name}:${attempt}`);
           auth = `Basic ${auth}`;
-          patch = await got.patch(`${api}/api/v1/user/change_password`, {
+          patch = await fetch(`${api}/api/v1/user/change_password`, {
+            method: 'PATCH',
             headers: {
               Authorization: auth,
               Accept: "application/json",
+              "Content-Type": "application/json"
+
             },
-            json: {
-              pass: new_pass,
-            },
+            body: JSON.stringify({
+              "pass": new_pass,
+            }),
           });
         } catch (e) {
-          console.log(e)
-          req.session.set("errors", `${e.response.body}`);
-          console.log(e.response.body);
+          //req.session.set("errors", `${e.response.body}`);
+          console.log(e);
         }
 
-        console.log(patch);
         if (patch == -2) {
-          req.session.set("errors", "Password Wrong");
-          res.redirect("/settings");
+          req.session.errors = "Password Wrong";
+          return res.redirect("/settings");
         } else {
-          req.session.delete();
-          req.session.set(
-            "successes",
-            "Change Password Successful, Please Login Again"
-          );
-          res.redirect("/login");
+          req.session.destroy();
+          //req.session.successes = "Change Password Successful, Please Login Again";
+          return res.redirect("/login");
         }
       }
     }
@@ -111,37 +108,35 @@ module.exports = function (fastify, opts, done) {
       let { password, password2 } = req.body;
       let del;
       if (!password || !password2) {
-        req.session.set("errors", "please fill in all fields");
+        req.session.errors = "please fill in all fields";
         res.redirect("/settings");
       } else if (
         password != password2 &&
-        password != req.session.get("password")
+        password != req.session.password
       ) {
-        req.session.set("errors", "Passwords don't match");
+        req.session.errors = "Passwords don't match";
         res.redirect("/settings");
       } else {
-        let name = req.session.get("user");
+        let name = req.session.user;
         let auth = btoa(`${name}:${password}`);
         auth = `Basic ${auth}`;
         try {
-          del = await got.delete(`${api}/api/v1/user/delete`, {
+          del = await fetch(`${api}/api/v1/user/delete`, {
+            method: 'DELETE',
             headers: {
               Authorization: auth,
               Accept: "application/json",
+              "Content-Type": "application/json"
             },
           });
         } catch (e) {
-          req.session.set("errors", `${e.response.body}`);
-          console.log(e.response.body);
+          //req.session.set("errors", `${e}`);
+          console.log(e);
         }
 
         console.log(del);
         if (del) {
-          req.session.delete();
-          req.session.set(
-            "successes",
-            "Account Deleted, pls dont come back to complain"
-          );
+          req.session.destroy();
         }
         res.redirect("/");
       }

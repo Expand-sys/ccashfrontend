@@ -1,23 +1,21 @@
 {
   "dependencies": {
-    "@mgcrea/fastify-session": "^0.14.1",
-    "dotenv": "^8.2.0",
+    "@fastify/cookie": "^9.1.0",
+    "@fastify/flash": "^5.1.0",
+    "@fastify/formbody": "^7.4.0",
+    "@fastify/secure-session": "^7.1.0",
+    "@fastify/session": "^10.5.0",
+    "@fastify/static": "^6.11.2",
+    "@fastify/view": "^8.2.0",
+    "dotenv": "^16.3.1",
     "express-validator": "^6.14.2",
-    "fastify": "^3.18.0",
-    "fastify-cookie": "^5.3.1",
-    "fastify-flash": "^2.0.2",
-    "fastify-formbody": "^5.0.0",
-    "fastify-plugin": "^3.0.0",
-    "fastify-secure-session": "^2.3.1",
-    "fastify-static": "^4.2.2",
+    "fastify": "^4.24.2",
     "fastify-tls-keygen": "^1.1.0",
-    "got": "^11.8.2",
     "https": "^1.0.0",
     "path": "^0.12.7",
-    "pino-pretty": "^5.0.2",
-    "point-of-view": "^4.15.0",
+    "pino-pretty": "^10.2.3",
     "pug": "^3.0.2",
-    "url": "^0.11.0"
+    "url": "^0.11.3"
   },
   "name": "ccashfrontend",
   "description": "",
@@ -34,7 +32,10 @@
   },
   "homepage": "https://github.com/Expand-sys/ccashfrontend#readme",
   "engines": {
-    "node": "16.x"
+    "node": "18.x"
   },
-  "build": {}
+  "build": {},
+  "scripts": {
+    "start": "node index.js"
+  }
 }
