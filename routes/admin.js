@@ -89,17 +89,14 @@ module.exports = function (fastify, opts, done) {
       req.session.errors = "";
       let responsecode;
       try {
-        balance = await fetch(`${api}/api/v1/user/balance`, {
+        balance = await fetch(`${api}/api/v1/user/balance?name=${name}`, {
           headers: {
             Authorization: req.session.b64,
             Accept: "application/json",
             "Content-Type": "application/json",
           },
-          searchParams: {
-            "name": name,
-          },
         });
-        balance = parseInt(balance.body);
+        balance = parseInt(await balance.text());
       } catch (e) {
         req.session.errors = `${e}`;
         console.log(e);
