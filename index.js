@@ -80,8 +80,9 @@ fastify.get("/", async function (req, res) {
   let errors = req.session.errors;
   req.session.errors = "";
   console.log(`${api}/api/properties`);
+  let checkalive
   try{
-    let checkalive = await fetch(`${api}/api/properties`, {
+    checkalive = await fetch(`${api}/api/properties`, {
       headers: {
         Accept: "application/json",
       },
@@ -91,7 +92,7 @@ fastify.get("/", async function (req, res) {
   }
   
   let alive = false
-  if (checkalive.ok) {
+  if (await checkalive.ok) {
     alive = true;
   }
 
