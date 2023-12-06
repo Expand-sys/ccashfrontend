@@ -65,13 +65,15 @@ module.exports = function (fastify, opts, done) {
             "pass": init_pass,
           }),
         });
-        post = post.ok;
+      
       } catch (e) {
         req.session.errors = `${e.text()}`;
         console.log(e.text());
       }
-      if (post) {
+      if (post.ok) {
         req.session.successes = `User ${name} registered.`;
+      } else{
+        req.session.errors = `${await post.text()}`
       }
       res.redirect("/admin");
     }
@@ -134,16 +136,17 @@ module.exports = function (fastify, opts, done) {
             "amount": parseInt(amount),
           }),
         });
-        console.log(patch, patch.blob())
-        patch = patch.ok;
       } catch (e) {
         req.session.errors = e;
         console.log(e);
       }
 
       console.log(patch);
-      if (patch) {
+      if (patch.ok) {
         req.session.successes = "Change Funds Successful";
+      } else {
+        req.session.errors = `${await patch.text()}`;
+
       }
       res.redirect("/admin");
     }
@@ -178,9 +181,13 @@ module.exports = function (fastify, opts, done) {
         req.session.errors = `${e}`;
         console.log(e);
       }
-      if (patch) {
+      if (patch.ok) {
         req.session.errors = ""
         req.session.successes = "Change Funds Successful";
+      } else {
+        req.session.errors = `${await patch.text()}`
+        req.session.successes = "";
+
       }
       res.redirect("/admin");
     }
@@ -281,8 +288,6 @@ module.exports = function (fastify, opts, done) {
           "MARKETPLACE=" +
           process.env.MARKETPLACE +
           "\n" +
-          "MONGO=" +
-          process.env.MONGO +
           "\nSETUP=true"
       );
       fs.mkdirSync(`${root}/tmp`);
@@ -316,8 +321,10 @@ module.exports = function (fastify, opts, done) {
         req.session.errors = `${e}`;
         console.log(e);
       }
-      if (close) {
+      if (close.ok) {
         req.session.successes = "Closed instance";
+      } else{
+        req.session.errors = `${await close.text()}`
       }
       res.redirect("../");
     }

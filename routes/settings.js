@@ -86,13 +86,15 @@ module.exports = function (fastify, opts, done) {
           console.log(e);
         }
 
-        if (patch == -2) {
-          req.session.errors = "Password Wrong";
-          return res.redirect("/settings");
-        } else {
-          req.session.destroy();
-          //req.session.successes = "Change Password Successful, Please Login Again";
+        if (patch.ok) {
+          req.session.user = null
+          req.session.password = null;
+          req.session.successes = "Change Password Successful, Please Login Again";
           return res.redirect("/login");
+          
+        } else {
+          req.session.errors = `${await patch.text()}`;
+          return res.redirect("/settings");
         }
       }
     }
@@ -135,8 +137,12 @@ module.exports = function (fastify, opts, done) {
         }
 
         console.log(del);
-        if (del) {
-          req.session.destroy();
+        if (del.ok) {
+          req.session.user = null
+          req.session.password = null;
+          req.session.successes = "User Deletion Successful, This is IRREVERSIBLE please do not complain";
+        } else{
+          req.session.errors = `${await del.text()}`
         }
         res.redirect("/");
       }
